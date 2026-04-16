@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="報價比對">
+<meta name="theme-color" content="#6B4F3A">
+<title>報價單比對</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#F5EFE6; --card:#FDFAF5; --border:#E8DFCF; --border2:#D5C9B8;
+  --brown:#6B4F3A; --brown2:#8B6B50; --brown3:#C9A882;
+  --text:#2C1F14; --muted:#9A8070; --hint:#C4B09A;
+  --green:#3D7A52; --green-bg:#EBF5EE; --green-border:#C0DEC8;
+  --red:#B04030; --red-bg:#FBF0ED; --red-border:#F0C8C0;
+  --blue:#3A6090; --blue-bg:#EBF0F8; --blue-border:#BED0E8;
+  --amber:#907020; --amber-bg:#FAF3E6; --amber-border:#E0C888;
+  --teal:#2A7878; --teal-bg:#EAF5F5;
+  --r:12px; --r-sm:8px; --r-xs:6px;
+  --shadow:0 2px 10px rgba(107,79,58,.1);
+  --shadow-lg:0 8px 30px rgba(107,79,58,.18);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{height:100%;scroll-behavior:smooth}
+body{
+  font-family:'Outfit',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  height:100%;min-height:100dvh;
+  font-size:14px;line-height:1.5;
+  overscroll-behavior:none;
+}
+
+/* ── App Shell ── */
+.app{display:flex;flex-direction:column;height:100dvh;max-height:100dvh;overflow:hidden}
+
+/* ── Top Bar ── */
+.topbar{
+  flex-shrink:0;
+  background:var(--card);
+  border-bottom:1px solid var(--border);
+  padding:0 16px;
+  height:56px;
+  display:flex;align-items:center;gap:10px;
+  position:relative;z-index:10;
+}
+.topbar-logo{display:flex;align-items:center;gap:8px}
+.logo-mark{
+  width:32px;height:32px;
+  background:var(--brown);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;color:#fff;flex-shrink:0;
+}
+.logo-text{font-size:16px;font-weight:700;color:var(--text);letter-spacing:-.02em}
+.topbar-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.icon-btn{
+  width:34px;height:34px;border-radius:var(--r-xs);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:18px;
+  background:transparent;border:none;color:var(--muted);
+  transition:background .12s;
+}
+.icon-btn:hover{background:var(--border)}
+.icon-btn:active{background:var(--border2)}
+
+/* ── Body ── */
+.body{flex:1;overflow:hidden;display:flex;flex-direction:column}
+
+/* ── Tabs ── */
+.tabs{
+  flex-shrink:0;
+  display:flex;
+  background:var(--card);
+  border-bottom:1px solid var(--border);
+  padding:0 16px;
+}
+.tab{
+  flex:1;max-width:100px;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  padding:12px 4px;
+  font-size:12px;font-weight:500;
+  color:var(--muted);cursor:pointer;
+  border-bottom:2px solid transparent;
+  transition:all .15s;white-space:nowrap;
+}
+.tab.act{color:var(--brown);border-bottom-color:var(--brown);font-weight:700}
+.tab-icon{font-size:16px;line-height:1}
+
+/* ── Panes ── */
+.pane{flex:1;display:none;flex-direction:column;overflow:hidden}
+.pane.show{display:flex}
+
+/* ── Home pane ── */
+.home-scroll{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+
+/* Upload cards */
+.upload-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  overflow:hidden;
+  box-shadow:var(--shadow);
+}
+.upload-card-header{
+  padding:10px 14px;
+  font-size:11px;font-weight:700;
+  letter-spacing:.05em;
+  display:flex;align-items:center;gap:7px;
+  border-bottom:1px solid var(--border);
+}
+.upload-card.new .upload-card-header{background:#EAF5EC;color:var(--green)}
+.upload-card.old .upload-card-header{background:#EAF0F8;color:var(--blue)}
+.upload-card-body{padding:12px}
+.dropzone{
+  border:1.5px dashed var(--border2);
+  border-radius:var(--r-sm);
+  padding:20px 12px;
+  text-align:center;
+  cursor:pointer;
+  color:var(--hint);
+  transition:all .15s;
+}
+.dropzone:hover,.dropzone.drag{border-color:var(--brown);background:var(--teal-bg);color:var(--brown)}
+.dropzone-icon{font-size:28px;margin-bottom:6px;line-height:1}
+.dropzone-text{font-size:13px;font-weight:500}
+.dropzone-sub{font-size:11px;margin-top:3px;color:var(--hint)}
+.file-item{
+  display:flex;align-items:center;gap:10px;
+  margin-top:8px;
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:var(--r-sm);
+  padding:10px 12px;
+}
+.file-item-icon{font-size:22px;flex-shrink:0}
+.file-item-info{flex:1;min-width:0}
+.file-item-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-item-meta{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:2px}
+.file-item-rm{font-size:18px;color:var(--hint);cursor:pointer;padding:4px;flex-shrink:0;line-height:1}
+.file-item-rm:hover{color:var(--red)}
+.sheet-select{
+  margin-top:8px;width:100%;
+  padding:7px 10px;
+  border:1px solid var(--border2);border-radius:var(--r-xs);
+  font-size:12px;background:var(--card);color:var(--text);
+  font-family:'Outfit',sans-serif;
+}
+
+/* Settings card */
+.settings-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);padding:14px;
+  box-shadow:var(--shadow);
+}
+.settings-title{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}
+.radio-btn{
+  padding:8px 12px;border-radius:var(--r-xs);
+  border:1.5px solid var(--border);
+  font-size:12px;font-weight:500;cursor:pointer;
+  text-align:center;transition:all .12s;
+  display:flex;align-items:center;gap:6px;
+  background:var(--card);
+}
+.radio-btn.sel{background:var(--brown);color:#fff;border-color:var(--brown)}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0}
+.toggle-label{font-size:13px;color:var(--text)}
+.toggle{width:44px;height:26px;border-radius:13px;background:var(--border2);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--brown)}
+.toggle::after{content:'';position:absolute;width:20px;height:20px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle.on::after{transform:translateX(18px)}
+
+/* Compare button */
+.compare-btn{
+  background:var(--brown);color:#fff;
+  border-radius:var(--r);
+  height:52px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  font-size:15px;font-weight:700;
+  cursor:pointer;letter-spacing:.02em;
+  box-shadow:0 4px 16px rgba(107,79,58,.35);
+  border:none;font-family:'Outfit',sans-serif;
+  transition:all .15s;
+}
+.compare-btn:active{transform:scale(.98);box-shadow:0 2px 8px rgba(107,79,58,.25)}
+.compare-btn:disabled{background:var(--border2);color:var(--hint);box-shadow:none;cursor:not-allowed}
+
+/* ── Results pane ── */
+.filter-bar{
+  flex-shrink:0;
+  background:var(--card);
+  border-bottom:1px solid var(--border);
+  padding:10px 16px;
+  display:flex;gap:7px;overflow-x:auto;
+}
+.filter-bar::-webkit-scrollbar{display:none}
+.chip{
+  display:inline-flex;align-items:center;gap:3px;
+  padding:6px 12px;border-radius:20px;
+  font-size:12px;font-weight:600;
+  white-space:nowrap;flex-shrink:0;
+  border:1.5px solid transparent;cursor:pointer;
+  transition:all .12s;
+}
+.chip.all{background:var(--bg);color:var(--text);border-color:var(--border2)}
+.chip.all.act{background:var(--brown);color:#fff;border-color:var(--brown)}
+.chip.up{background:var(--red-bg);color:var(--red);border-color:var(--red-border)}
+.chip.up.act{background:var(--red);color:#fff}
+.chip.dn{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
+.chip.dn.act{background:var(--green);color:#fff}
+.chip.add{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-border)}
+.chip.add.act{background:var(--blue);color:#fff}
+.chip.rm{background:#F3F4F6;color:#6B7280;border-color:#D1D5DB}
+.chip.rm.act{background:#6B7280;color:#fff}
+.chip.sl{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-border)}
+.chip.sl.act{background:var(--amber);color:#fff}
+.chip.sb{background:var(--green-bg);color:var(--teal);border-color:#A8D8D8}
+.chip.sb.act{background:var(--teal);color:#fff}
+.chip.sm{background:var(--bg);color:var(--muted);border-color:var(--border)}
+.chip.sm.act{background:var(--muted);color:#fff}
+
+.search-bar{
+  flex-shrink:0;
+  padding:10px 16px;
+  background:var(--card);
+  border-bottom:1px solid var(--border);
+}
+.search-input{
+  width:100%;padding:9px 14px 9px 36px;
+  border:1px solid var(--border2);border-radius:20px;
+  font-size:13px;background:var(--bg);color:var(--text);
+  font-family:'Outfit',sans-serif;outline:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23C4B09A' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:12px center;
+  transition:border .15s;
+}
+.search-input:focus{border-color:var(--brown)}
+
+.rows-list{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+.rows-list::-webkit-scrollbar{width:3px}
+.rows-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--hint);gap:8px;padding:40px}
+.empty-icon{font-size:48px}
+.empty-text{font-size:14px;font-weight:500;text-align:center}
+.empty-sub{font-size:12px;text-align:center}
+
+/* Row cards */
+.row-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:12px 14px;
+  box-shadow:0 1px 4px rgba(107,79,58,.06);
+  cursor:pointer;
+  transition:box-shadow .12s;
+}
+.row-card:active{box-shadow:var(--shadow)}
+.row-card.up{border-left:3px solid var(--red);background:#FEF9F8}
+.row-card.down{border-left:3px solid var(--green);background:#F8FDF9}
+.row-card.added{border-left:3px solid var(--blue);background:#F8FAFD}
+.row-card.removed{border-left:3px solid #9CA3AF;background:#F9FAFB}
+.row-card.stock_lost{border-left:3px solid var(--amber);background:#FDF9F0}
+.row-card.stock_back{border-left:3px solid var(--teal);background:#F0FAF8}
+.row-card.same{border-left:3px solid var(--border2)}
+
+.rc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:5px}
+.rc-sku{font-size:11px;font-weight:500;color:var(--brown2);font-family:'JetBrains Mono',monospace;line-height:1.4}
+.rc-tags{display:flex;gap:4px;flex-wrap:wrap;flex-shrink:0}
+.tag{display:inline-flex;align-items:center;gap:2px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
+.tag.up{background:var(--red-bg);color:var(--red)}
+.tag.down{background:var(--green-bg);color:var(--green)}
+.tag.added{background:var(--blue-bg);color:var(--blue)}
+.tag.removed{background:#F3F4F6;color:#6B7280}
+.tag.stock_lost{background:var(--amber-bg);color:var(--amber)}
+.tag.stock_back{background:var(--teal-bg);color:var(--teal)}
+.tag.same{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+
+.rc-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:9px;line-height:1.35}
+.rc-prices{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.price-block{background:var(--bg);border-radius:var(--r-xs);padding:7px 9px}
+.price-label{font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--hint);margin-bottom:3px}
+.price-val{font-size:15px;font-weight:700;color:var(--text);line-height:1}
+.price-diff{font-size:12px;font-weight:700;line-height:1}
+.price-diff.up{color:var(--red)}
+.price-diff.down{color:var(--green)}
+.price-diff.added{color:var(--blue)}
+.price-diff.stock_lost{color:var(--amber);font-size:11px}
+.price-diff.stock_back{color:var(--teal);font-size:11px}
+.price-muted{color:var(--hint)}
+
+/* ── Summary pane ── */
+.summary-scroll{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);padding:16px;
+  box-shadow:var(--shadow);
+}
+.stat-card.up{border-top:3px solid var(--red)}
+.stat-card.down{border-top:3px solid var(--green)}
+.stat-card.added{border-top:3px solid var(--blue)}
+.stat-card.removed{border-top:3px solid #9CA3AF}
+.stat-card.sl{border-top:3px solid var(--amber)}
+.stat-card.sb{border-top:3px solid var(--teal)}
+.stat-card.total{border-top:3px solid var(--brown)}
+.stat-card.same{border-top:3px solid var(--border2)}
+.stat-num{font-size:32px;font-weight:700;line-height:1;margin-bottom:4px}
+.stat-card.up .stat-num{color:var(--red)}
+.stat-card.down .stat-num{color:var(--green)}
+.stat-card.added .stat-num{color:var(--blue)}
+.stat-card.sl .stat-num{color:var(--amber)}
+.stat-card.sb .stat-num{color:var(--teal)}
+.stat-card.total .stat-num{color:var(--brown)}
+.stat-lbl{font-size:12px;font-weight:600;color:var(--muted)}
+.stat-sub{font-size:11px;color:var(--hint);margin-top:2px}
+.info-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);padding:14px;
+  box-shadow:var(--shadow);
+}
+.info-row{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.info-row:last-child{border-bottom:none}
+.info-key{color:var(--muted);width:90px;flex-shrink:0}
+.info-val{font-weight:600;flex:1;font-family:'JetBrains Mono',monospace;font-size:12px}
+
+/* ── Loading overlay ── */
+.overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(245,239,230,.85);
+  z-index:100;
+  align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);
+}
+.overlay.show{display:flex}
+.spinner-wrap{text-align:center}
+.spinner{
+  width:44px;height:44px;
+  border:3px solid var(--border2);
+  border-top-color:var(--brown);
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+  margin:0 auto 14px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner-msg{font-size:15px;font-weight:600;color:var(--text)}
+.spinner-sub{font-size:12px;color:var(--muted);margin-top:4px}
+
+/* ── Detail sheet (mobile bottom sheet) ── */
+.detail-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(44,31,20,.4);
+  z-index:200;
+  align-items:flex-end;justify-content:center;
+}
+.detail-overlay.show{display:flex}
+.detail-sheet{
+  background:var(--card);
+  border-radius:20px 20px 0 0;
+  width:100%;max-height:80vh;
+  overflow-y:auto;
+  padding:8px 0 32px;
+  box-shadow:0 -4px 30px rgba(44,31,20,.2);
+}
+.detail-handle{width:40px;height:4px;background:var(--border2);border-radius:2px;margin:8px auto 16px}
+.detail-content{padding:0 18px}
+.detail-sku{font-size:12px;color:var(--brown2);font-family:'JetBrains Mono',monospace;margin-bottom:4px}
+.detail-name{font-size:16px;font-weight:700;margin-bottom:14px;line-height:1.35}
+.detail-section{margin-bottom:14px}
+.detail-section-title{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.detail-field{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;align-items:center}
+.detail-field:last-child{border-bottom:none}
+.detail-field-key{color:var(--muted);flex:1}
+.detail-field-val{font-weight:500;text-align:right}
+.detail-field-val.up{color:var(--red);font-weight:700}
+.detail-field-val.down{color:var(--green);font-weight:700}
+
+/* ── Status bar ── */
+.statusbar{
+  flex-shrink:0;padding:5px 16px;
+  background:var(--card);border-top:1px solid var(--border);
+  font-size:11px;color:var(--muted);
+  font-family:'JetBrains Mono',monospace;
+}
+
+/* ── Desktop layout ── */
+@media(min-width:768px){
+  .app{flex-direction:column}
+  .body{flex-direction:row}
+  .tabs{
+    flex-direction:column;
+    width:64px;border-bottom:none;
+    border-right:1px solid var(--border);
+    padding:12px 0;background:var(--card);
+  }
+  .tab{flex:none;flex-direction:column;max-width:none;padding:14px 8px;border-bottom:none;border-right:2px solid transparent;font-size:10px;gap:4px}
+  .tab.act{border-bottom:none;border-right-color:var(--brown)}
+  .tab-icon{font-size:20px}
+  .pane-wrapper{flex:1;display:flex;overflow:hidden}
+  .pane{display:none}
+  .pane.show{display:flex}
+
+  /* Sidebar */
+  .home-pane{display:flex;flex-direction:row}
+  .home-sidebar{width:280px;flex-shrink:0;overflow-y:auto;border-right:1px solid var(--border);padding:16px;display:flex;flex-direction:column;gap:12px}
+  .home-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+  .home-main-inner{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+  .home-scroll{padding:0}
+  .compare-btn{height:44px;font-size:14px}
+  .topbar{height:52px}
+  .tabs{height:calc(100% - 52px)}
+}
+@media(min-width:1024px){
+  .home-sidebar{width:300px}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="logo-mark">☕</div>
+      <span class="logo-text">報價比對</span>
+    </div>
+    <div class="topbar-right">
+      <div class="icon-btn" onclick="exportReport()" title="匯出報告">⬇</div>
+      <div class="icon-btn" onclick="clearAll()" title="清除">🗑</div>
+    </div>
+  </div>
+
+  <div class="body">
+    <!-- Tabs (vertical on desktop, horizontal on mobile) -->
+    <div class="tabs" id="tabs">
+      <div class="tab act" id="t-home" onclick="sw('home')">
+        <span class="tab-icon">☕</span><span>上傳</span>
+      </div>
+      <div class="tab" id="t-results" onclick="sw('results')">
+        <span class="tab-icon">⚖</span><span>結果</span>
+      </div>
+      <div class="tab" id="t-summary" onclick="sw('summary')">
+        <span class="tab-icon">📊</span><span>摘要</span>
+      </div>
+    </div>
+
+    <!-- Panes -->
+    <div class="pane-wrapper" style="flex:1;overflow:hidden;display:flex">
+
+      <!-- Home / Upload pane -->
+      <div class="pane show home-pane" id="p-home">
+        <div class="home-sidebar" id="home-sidebar">
+          <!-- New file -->
+          <div class="upload-card new">
+            <div class="upload-card-header">📅 新報價單（比對基準）</div>
+            <div class="upload-card-body">
+              <div class="dropzone" id="dz-new" onclick="document.getElementById('fi-new').click()">
+                <div class="dropzone-icon">📁</div>
+                <div class="dropzone-text">點擊或拖曳上傳</div>
+                <div class="dropzone-sub">.xlsx / .xls / .csv / .tsv</div>
+              </div>
+              <input type="file" id="fi-new" accept=".xlsx,.xls,.csv,.tsv,.txt" onchange="loadFile('new',this.files[0])">
+              <div id="fc-new"></div>
+            </div>
+          </div>
+
+          <!-- Old file -->
+          <div class="upload-card old">
+            <div class="upload-card-header">📂 舊報價單（對照基準）</div>
+            <div class="upload-card-body">
+              <div class="dropzone" id="dz-old" onclick="document.getElementById('fi-old').click()">
+                <div class="dropzone-icon">📁</div>
+                <div class="dropzone-text">點擊或拖曳上傳</div>
+                <div class="dropzone-sub">.xlsx / .xls / .csv / .tsv</div>
+              </div>
+              <input type="file" id="fi-old" accept=".xlsx,.xls,.csv,.tsv,.txt" onchange="loadFile('old',this.files[0])">
+              <div id="fc-old"></div>
+            </div>
+          </div>
+
+          <!-- Settings -->
+          <div class="settings-card">
+            <div class="settings-title">主鍵欄位</div>
+            <div class="settings-grid" id="keymode-btns">
+              <div class="radio-btn sel" onclick="setKeyMode('auto',this)">🔍 自動偵測</div>
+              <div class="radio-btn" onclick="setKeyMode('sku',this)">🏷 料號</div>
+              <div class="radio-btn" onclick="setKeyMode('barcode',this)">📊 條碼 EAN</div>
+              <div class="radio-btn" onclick="setKeyMode('name',this)">📝 品名</div>
+            </div>
+            <div class="settings-title" style="margin-top:4px">比對選項</div>
+            <div class="toggle-row">
+              <span class="toggle-label">忽略大小寫</span>
+              <div class="toggle on" id="tog-ic" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="toggle-row">
+              <span class="toggle-label">忽略前後空格</span>
+              <div class="toggle on" id="tog-sp" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="toggle-row">
+              <span class="toggle-label">只顯示差異</span>
+              <div class="toggle" id="tog-od" onclick="this.classList.toggle('on')"></div>
+            </div>
+          </div>
+
+          <!-- Compare button -->
+          <button class="compare-btn" id="cmp-btn" onclick="runCompare()" disabled>
+            ⚖ 開始比對
+          </button>
+        </div>
+
+        <!-- Desktop: show results inline -->
+        <div class="home-main" id="home-main" style="display:none">
+          <div class="home-main-inner" id="home-main-inner"></div>
+        </div>
+      </div>
+
+      <!-- Results pane -->
+      <div class="pane" id="p-results">
+        <div class="filter-bar" id="filter-bar">
+          <div class="chip all act" onclick="setFilter('all',this)">全部 <span id="c-all">0</span></div>
+          <div class="chip up" onclick="setFilter('up',this)">▲ 調漲 <span id="c-up">0</span></div>
+          <div class="chip dn" onclick="setFilter('down',this)">▼ 調降 <span id="c-dn">0</span></div>
+          <div class="chip add" onclick="setFilter('added',this)">＋ 新增 <span id="c-add">0</span></div>
+          <div class="chip rm" onclick="setFilter('removed',this)">－ 移除 <span id="c-rm">0</span></div>
+          <div class="chip sl" onclick="setFilter('stock_lost',this)">🔴 缺貨 <span id="c-sl">0</span></div>
+          <div class="chip sb" onclick="setFilter('stock_back',this)">🟢 補貨 <span id="c-sb">0</span></div>
+          <div class="chip sm" onclick="setFilter('same',this)">＝ 相同 <span id="c-sm">0</span></div>
+        </div>
+        <div class="search-bar">
+          <input class="search-input" id="search-input" type="text" placeholder="搜尋料號或品名…" oninput="renderRows()">
+        </div>
+        <div class="rows-list" id="rows-list">
+          <div class="empty-state">
+            <div class="empty-icon">☕</div>
+            <div class="empty-text">尚未比對</div>
+            <div class="empty-sub">請先上傳新舊報價單</div>
+          </div>
+        </div>
+        <div class="statusbar" id="statusbar">就緒</div>
+      </div>
+
+      <!-- Summary pane -->
+      <div class="pane" id="p-summary">
+        <div class="summary-scroll" id="summary-scroll">
+          <div class="empty-state">
+            <div class="empty-icon">📊</div>
+            <div class="empty-text">尚未比對</div>
+            <div class="empty-sub">請先執行比對以查看摘要</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Loading overlay -->
+<div class="overlay" id="overlay">
+  <div class="spinner-wrap">
+    <div class="spinner"></div>
+    <div class="spinner-msg" id="sp-msg">處理中</div>
+    <div class="spinner-sub" id="sp-sub">請稍候…</div>
+  </div>
+</div>
+
+<!-- Detail bottom sheet -->
+<div class="detail-overlay" id="detail-overlay" onclick="closeDetail(event)">
+  <div class="detail-sheet" id="detail-sheet">
+    <div class="detail-handle"></div>
+    <div class="detail-content" id="detail-content"></div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────
+const S = {
+  new: null, old: null,       // {label, rows, cols, fileName}
+  results: [],                 // compared rows
+  cols: [],                    // all column names
+  stats: {},
+  keyMode: 'auto',
+  curFilter: 'all',
+};
+
+// ── UI helpers ─────────────────────────────────────────────────
+const $  = id => document.getElementById(id);
+const ov = (msg,sub='') => { $('sp-msg').textContent=msg; $('sp-sub').textContent=sub||'請稍候…'; $('overlay').classList.add('show'); };
+const hv = () => $('overlay').classList.remove('show');
+const st = m => $('statusbar').textContent = m;
+
+function sw(t){
+  ['home','results','summary'].forEach(n=>{
+    $('t-'+n).classList.toggle('act', n===t);
+    $('p-'+n).classList.toggle('show', n===t);
+  });
+}
+
+function setKeyMode(mode, el){
+  S.keyMode = mode;
+  document.querySelectorAll('#keymode-btns .radio-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+// ── File loading ───────────────────────────────────────────────
+async function loadFile(slot, file){
+  if(!file) return;
+  ov('載入中…', file.name);
+  try {
+    const buf = await file.arrayBuffer();
+    const ext = file.name.split('.').pop().toLowerCase();
+    let sheets, activeSheet, rows, cols;
+
+    if(['xlsx','xls'].includes(ext)){
+      const wb = XLSX.read(buf, {type:'array', cellText:false, cellDates:true});
+      const result = processWorkbook(wb, file.name);
+      sheets = result.sheets;
+      activeSheet = result.activeSheet;
+      rows = result.rows;
+      cols = result.cols;
+    } else {
+      // CSV/TSV
+      const text = await readText(buf);
+      const sep = text.indexOf('\t') > text.indexOf(',') ? '\t' : ',';
+      const wb = XLSX.read(text, {type:'string', FS:sep});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const raw = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      const headerRow = detectHeaderRow(raw);
+      cols = raw[headerRow].map(v=>String(v).trim());
+      rows = raw.slice(headerRow+1).filter(r=>r.some(v=>v!=='')).map(r=>{
+        const obj={};
+        cols.forEach((c,i)=>obj[c]=String(r[i]||'').trim());
+        return obj;
+      });
+      sheets = [file.name];
+      activeSheet = file.name;
+    }
+
+    S[slot] = {label: file.name.replace(/\.[^.]+$/,''), rows, cols, sheets, activeSheet, raw_wb: ext==='xlsx'||ext==='xls' ? XLSX.read(buf,{type:'array'}) : null, fileName: file.name};
+    renderFileCard(slot);
+    updateCompareBtn();
+    hv();
+    st('已載入：'+file.name+' ('+rows.length+' 筆)');
+  } catch(e){
+    hv();
+    alert('載入失敗：\n'+e.message);
+  }
+}
+
+function processWorkbook(wb, fileName){
+  const sheetNames = wb.SheetNames;
+  const sheetData = {};
+  sheetNames.forEach(s=>{
+    try{
+      const ws = wb.Sheets[s];
+      const raw = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      if(raw.length < 2) return;
+      const headerRow = detectHeaderRow(raw);
+      const cols = raw[headerRow].map(v=>String(v).trim()).filter(Boolean);
+      if(cols.length < 2) return;
+      const rows = raw.slice(headerRow+1).filter(r=>r.some(v=>v!=='')).map(r=>{
+        const obj={};
+        cols.forEach((c,i)=>obj[c]=String(r[i]||'').trim());
+        return obj;
+      });
+      if(rows.length > 0) sheetData[s] = {cols, rows};
+    }catch(e){}
+  });
+  if(Object.keys(sheetData).length === 0)
+    return {sheets:[sheetNames[0]], activeSheet:sheetNames[0], rows:[], cols:[]};
+
+  // Try to merge sheets with same key column
+  const keyColCounts = {};
+  const validSheets = {};
+  Object.entries(sheetData).forEach(([s,d])=>{
+    const kc = detectKeyColName(d.cols, d.rows);
+    if(kc && d.rows.filter(r=>r[kc]&&r[kc].trim()).length > 2){
+      validSheets[s] = {...d, keyCol:kc};
+      keyColCounts[kc] = (keyColCounts[kc]||0) + 1;
+    }
+  });
+
+  // Find dominant key col (from largest sheet)
+  const sortedValid = Object.entries(validSheets).sort((a,b)=>b[1].rows.length-a[1].rows.length);
+  if(sortedValid.length > 1){
+    const dominantKey = sortedValid[0][1].keyCol;
+    const mergeable = sortedValid.filter(([,d])=>d.keyCol===dominantKey);
+    if(mergeable.length > 1){
+      const seen = new Set();
+      const combined = [];
+      const allCols = [...new Set(mergeable.flatMap(([,d])=>d.cols))];
+      mergeable.forEach(([,d])=>{
+        d.rows.forEach(r=>{
+          const k = String(r[dominantKey]||'').trim().toUpperCase();
+          if(k && !seen.has(k)){ seen.add(k); combined.push(r); }
+        });
+      });
+      const active = `(全部分頁合併 ${mergeable.length} 頁)`;
+      return {sheets:[active,...Object.keys(sheetData)], activeSheet:active, rows:combined, cols:allCols};
+    }
+  }
+
+  // Single best sheet
+  const best = sortedValid.length > 0 ? sortedValid[0] : Object.entries(sheetData).sort((a,b)=>b[1].rows.length-a[1].rows.length)[0];
+  return {sheets:Object.keys(sheetData), activeSheet:best[0], rows:best[1].rows, cols:best[1].cols};
+}
+
+function detectHeaderRow(raw){
+  let best=0, bestScore=-1;
+  for(let i=0;i<Math.min(10,raw.length);i++){
+    const score = raw[i].filter(v=>v&&String(v).trim()&&isNaN(Number(String(v).replace(/[$,]/g,'')))).length;
+    if(score>bestScore){bestScore=score;best=i;}
+  }
+  return best;
+}
+
+function detectKeyColName(cols, rows){
+  const sample = rows.slice(0,50);
+  let bestCol=null, bestScore=-1;
+  cols.forEach(col=>{
+    const vals = sample.map(r=>String(r[col]||'').trim()).filter(Boolean);
+    if(vals.length===0) return;
+    const nameScore = /料號|sku|item.?no|品番|型號|code|part/i.test(col)?2:0
+                    + /barcode|ean|upc|jan|gtin|條碼|国际条码/i.test(col)?1.8:0;
+    const eanScore = vals.filter(v=>/^\d{8,14}$/.test(v)).length/vals.length*1.5;
+    const skuScore = vals.filter(v=>/^[A-Za-z0-9\-_/.]{3,30}$/.test(v)).length/vals.length*1.0;
+    const score = nameScore + eanScore + skuScore;
+    if(score>bestScore){bestScore=score;bestCol=col;}
+  });
+  return bestCol;
+}
+
+async function readText(buf){
+  const bytes = new Uint8Array(buf);
+  const encs = ['utf-8','big5','gb18030'];
+  for(const enc of encs){
+    try{
+      const text = new TextDecoder(enc,{fatal:true}).decode(bytes);
+      return text;
+    }catch(e){}
+  }
+  return new TextDecoder('latin1').decode(bytes);
+}
+
+function renderFileCard(slot){
+  const d = S[slot];
+  if(!d){ $('fc-'+slot).innerHTML=''; return; }
+  const hasSheets = d.sheets && d.sheets.length > 1;
+  const sheetSel = hasSheets
+    ? `<select class="sheet-select" onchange="changeSheet('${slot}',this.value)">
+        ${d.sheets.map(s=>`<option value="${s}"${s===d.activeSheet?' selected':''}>${s}</option>`).join('')}
+       </select>` : '';
+  $('fc-'+slot).innerHTML = `
+    <div class="file-item">
+      <div class="file-item-icon">📄</div>
+      <div class="file-item-info">
+        <div class="file-item-name">${esc(d.label)}</div>
+        <div class="file-item-meta">${d.rows.length} 筆 · ${d.cols.length} 欄</div>
+      </div>
+      <div class="file-item-rm" onclick="clearSlot('${slot}')">×</div>
+    </div>
+    ${sheetSel}`;
+}
+
+function changeSheet(slot, sheetName){
+  const d = S[slot];
+  if(!d||!d.raw_wb) return;
+  try{
+    const wb = d.raw_wb;
+    if(sheetName.startsWith('(全部')){
+      const result = processWorkbook(wb, d.fileName);
+      d.rows = result.rows; d.cols = result.cols; d.activeSheet = sheetName;
+    } else {
+      const ws = wb.Sheets[sheetName];
+      const raw = XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      const hr = detectHeaderRow(raw);
+      d.cols = raw[hr].map(v=>String(v).trim());
+      d.rows = raw.slice(hr+1).filter(r=>r.some(v=>v!=='')).map(r=>{
+        const obj={};d.cols.forEach((c,i)=>obj[c]=String(r[i]||'').trim());return obj;
+      });
+      d.activeSheet = sheetName;
+    }
+    renderFileCard(slot);
+    st('已切換：'+sheetName+' ('+d.rows.length+' 筆)');
+  }catch(e){alert('切換失敗：'+e.message);}
+}
+
+function clearSlot(slot){
+  S[slot] = null;
+  $('fc-'+slot).innerHTML = '';
+  updateCompareBtn();
+}
+
+function updateCompareBtn(){
+  $('cmp-btn').disabled = !(S.new && S.old);
+}
+
+// ── Compare engine (JS port) ────────────────────────────────────
+const STOCK_KW = ['補貨中','缺貨','停產','停售','絕版','停止','無庫存','out of stock','discontinued','pre-order','預購'];
+const SKIP_COL = [/利潤/,/margin/i,/profit/i,/毛利/,/折扣/,/discount/i,/利率/,/佣金/,/commission/i];
+const PRICE_KW = ['價','price','售','底','進','cost','amount','金額','費','msrp','retail','wholesale','定價','牌價','經銷'];
+const STOCK_COL_KW = ['訂購','庫存','stock','qty','數量','quantity','供貨','缺貨','補貨'];
+const QTY_PAT = [/訂購/,/數量/,/qty/i,/quantity/i,/stock/i,/庫存/,/order/i,/pcs/i,/件數/];
+
+const isStock = v => STOCK_KW.some(k=>String(v).includes(k));
+const isSkipCol = c => SKIP_COL.some(p=>p.test(String(c).toLowerCase()));
+const isPriceCol = c => PRICE_KW.some(k=>String(c).toLowerCase().includes(k));
+const isStockCol = c => STOCK_COL_KW.some(k=>String(c).toLowerCase().includes(k));
+const isQtyCol = c => QTY_PAT.some(p=>p.test(String(c).toLowerCase()));
+const toNum = s => { const c=String(s).replace(/[$,，NT￥¥\s%＄]/g,''); const n=parseFloat(c); return isNaN(n)?null:n; };
+const gv = (row,col) => row?String(row[col]||'').trim():'';
+
+function normKey(s, ic, isp){
+  s = String(s||'').trim();
+  if(ic) s = s.toUpperCase();
+  if(isp) s = s.replace(/\s+/g,'');
+  return s;
+}
+
+function stripMonth(s){
+  return String(s).replace(/^\d+月\s*/,'').replace(/^\d{4}年?\d*月?\s*/,'').replace(/\s*(活動|特價|促銷)\s*/g,'').trim();
+}
+
+function matchCols(aCols, bCols, ic){
+  const pairs=[], used=new Set();
+  const norm=s=>ic?String(s).toUpperCase():String(s);
+  const bn={}; bCols.forEach(c=>bn[norm(c)]=c);
+  const bs={}; bCols.forEach(c=>{const k=stripMonth(norm(c));if(!bs[k])bs[k]=c;});
+  aCols.forEach(ac=>{
+    const an=norm(ac), astr=stripMonth(an);
+    if(bn[an]&&!used.has(bn[an])){pairs.push([ac,bn[an]]);used.add(bn[an]);return;}
+    if(bs[astr]&&!used.has(bs[astr])){pairs.push([ac,bs[astr]]);used.add(bs[astr]);return;}
+    let m=null;
+    for(const bc of bCols){
+      if(used.has(bc)) continue;
+      const bstr=stripMonth(norm(bc));
+      if(astr&&bstr&&(astr.includes(bstr)||bstr.includes(astr))){m=bc;break;}
+    }
+    if(m){pairs.push([ac,m]);used.add(m);}
+  });
+  bCols.forEach(bc=>{if(!used.has(bc))pairs.push([bc,bc]);});
+  return pairs;
+}
+
+function colLabel(ac){ return stripMonth(ac)||ac; }
+
+function cmpVals(a, b, ic, isp){
+  let sa=String(a||'').trim(), sb=String(b||'').trim();
+  if(isp){sa=sa.replace(/\s+/g,' ').trim();sb=sb.replace(/\s+/g,' ').trim();}
+  if(!sa&&!sb) return '—';
+  if(!sa) return '新增→'+sb.slice(0,40);
+  if(!sb) return '移除←'+sa.slice(0,40);
+  const na=toNum(sa), nb=toNum(sb);
+  if(na!==null&&nb!==null){
+    if(Math.abs(na-nb)<1e-6) return '';
+    const diff=na-nb, pct=nb?diff/nb*100:0;
+    return (diff>0?'↑':'↓')+Math.abs(diff).toLocaleString()+'（'+(pct>0?'+':'')+pct.toFixed(1)+'%）';
+  }
+  const ca=ic?sa.toUpperCase():sa, cb=ic?sb.toUpperCase():sb;
+  return ca===cb?'':'變更';
+}
+
+function stockDiff(a, b){
+  const sa=String(a||'').trim(), sb=String(b||'').trim();
+  if(sa===sb) return '';
+  const aStk=isStock(sa), bStk=isStock(sb);
+  if(!bStk&&aStk) return '🔴 缺貨';
+  if(bStk&&!aStk) return '🟢 補貨';
+  if(!sa) return '新增→'+sb.slice(0,20);
+  if(!sb) return '移除←'+sa.slice(0,20);
+  const na=toNum(sa),nb=toNum(sb);
+  if(na!==null&&nb!==null){const d=na-nb;return Math.abs(d)<1e-6?'':(d>0?'↑':'↓')+Math.abs(d);}
+  return sa!==sb?'變更':'';
+}
+
+function runCompare(){
+  if(!S.new||!S.old){ alert('請先載入新舊報價單'); return; }
+  ov('比對中…','正在分析差異，請稍候');
+  setTimeout(()=>{
+    try{
+      const ic = $('tog-ic').classList.contains('on');
+      const isp = $('tog-sp').classList.contains('on');
+      const km = S.keyMode;
+      const aRows = S.new.rows, bRows = S.old.rows;
+      const aLabel = S.new.label, bLabel = S.old.label;
+
+      // Detect key columns
+      const keyA = detectKeyColName(S.new.cols, aRows) || S.new.cols[0];
+      const keyB = detectKeyColName(S.old.cols, bRows) || S.old.cols[0];
+
+      // Build indexed maps
+      const ai={}, bi={};
+      aRows.forEach(r=>{ const k=normKey(r[keyA],ic,isp); if(k) ai[k]=r; });
+      bRows.forEach(r=>{ const k=normKey(r[keyB],ic,isp); if(k) bi[k]=r; });
+
+      const aCols = S.new.cols.filter(c=>c!==keyA&&!isSkipCol(c));
+      const bCols = S.old.cols.filter(c=>c!==keyB&&!isSkipCol(c));
+      const pairs = matchCols(aCols, bCols, ic);
+      const pricePairs = pairs.filter(([ac,bc])=>isPriceCol(colLabel(ac))&&!isQtyCol(colLabel(ac)));
+      const stockPairs = pairs.filter(([ac,bc])=>isStockCol(colLabel(ac))||isQtyCol(colLabel(ac)));
+
+      const allKeys = [...new Set([...Object.keys(ai),...Object.keys(bi)])].sort();
+      const results=[], stats={same:0,up:0,down:0,added:0,removed:0,stock_lost:0,stock_back:0};
+      const allCols=[];
+      const colSet=new Set(['料號/主鍵']);
+      pairs.forEach(([ac])=>{
+        const lbl=colLabel(ac);
+        [`${lbl}（${aLabel}）`,`${lbl}（${bLabel}）`,`${lbl}_差異`].forEach(c=>{if(!colSet.has(c)){colSet.add(c);allCols.push(c);}});
+      });
+      S.cols = ['料號/主鍵',...allCols];
+
+      allKeys.forEach(key=>{
+        const ra=ai[key], rb=bi[key];
+        let tag, tags=[];
+
+        if(ra&&!rb){ tag='added'; tags=['added']; }
+        else if(rb&&!ra){ tag='removed'; tags=['removed']; }
+        else {
+          // check price existence
+          if(pricePairs.length){
+            const bHas=pricePairs.some(([,bc])=>gv(rb,bc)&&!['-','—',''].includes(gv(rb,bc)));
+            const aHas=pricePairs.some(([ac])=>gv(ra,ac)&&!['-','—',''].includes(gv(ra,ac)));
+            if(!bHas&&aHas){tag='added';tags=['added'];}
+            else if(!aHas&&bHas){tag='removed';tags=['removed'];}
+          }
+          if(!tag){
+            let pUp=false, pDn=false;
+            const aIsStk=stockPairs.some(([ac])=>isStock(gv(ra,ac)));
+            const bIsStk=stockPairs.some(([,bc])=>isStock(gv(rb,bc)));
+            pairs.forEach(([ac,bc])=>{
+              const lbl=colLabel(ac);
+              if(!isQtyCol(lbl)){
+                const d=cmpVals(gv(ra,ac),gv(rb,bc),ic,isp);
+                if(pricePairs.some(p=>p[0]===ac)){
+                  if(d.startsWith('↑'))pUp=true;
+                  else if(d.startsWith('↓'))pDn=true;
+                }
+              }
+            });
+            if(pUp&&!pDn) tags.push('up');
+            else if(pDn&&!pUp) tags.push('down');
+            else if(pUp&&pDn) tags.push('up');
+            if(aIsStk&&!bIsStk) tags.push('stock_lost');
+            else if(aIsStk&&bIsStk&&(tags.includes('up')||tags.includes('down'))) tags.push('stock_lost');
+            else if(bIsStk&&!aIsStk) tags.push('stock_back');
+            if(!tags.length) tags=['same'];
+            if(tags.includes('stock_lost')) tag='stock_lost';
+            else if(tags.includes('stock_back')) tag='stock_back';
+            else if(tags.includes('up')) tag='up';
+            else if(tags.includes('down')) tag='down';
+            else tag='same';
+          }
+        }
+
+        stats[tag]=(stats[tag]||0)+1;
+        const row={'料號/主鍵':key,'_tag':tag,'_tags':tags.join(',')};
+        pairs.forEach(([ac,bc])=>{
+          const lbl=colLabel(ac);
+          const va=ra?gv(ra,ac):'', vb=rb?gv(rb,bc):'';
+          row[`${lbl}（${aLabel}）`]=va;
+          row[`${lbl}（${bLabel}）`]=vb;
+          row[`${lbl}_差異`]=isQtyCol(lbl)?stockDiff(va,vb):cmpVals(va,vb,ic,isp);
+        });
+        results.push(row);
+      });
+
+      stats.total_diff=(stats.up||0)+(stats.down||0)+(stats.added||0)+(stats.removed||0)+(stats.stock_lost||0)+(stats.stock_back||0);
+      stats.a_rows=aRows.length; stats.b_rows=bRows.length;
+      stats.key_col=keyA===keyB?keyA:keyA+' ↔ '+keyB;
+      stats.a_label=aLabel; stats.b_label=bLabel;
+
+      S.results=results; S.stats=stats;
+      updateCounts();
+      renderRows();
+      renderSummary();
+      hv();
+      sw('results');
+      st('比對完成：'+results.length+' 筆 | 差異 '+stats.total_diff+' 筆');
+    }catch(e){
+      hv();
+      alert('比對失敗：\n'+e.message+'\n\n'+e.stack);
+    }
+  }, 50);
+}
+
+// ── Render ─────────────────────────────────────────────────────
+function updateCounts(){
+  const s=S.stats;
+  $('c-all').textContent=S.results.length;
+  $('c-up').textContent=s.up||0;
+  $('c-dn').textContent=s.down||0;
+  $('c-add').textContent=s.added||0;
+  $('c-rm').textContent=s.removed||0;
+  $('c-sl').textContent=S.results.filter(r=>(r._tags||r._tag).includes('stock_lost')).length;
+  $('c-sb').textContent=S.results.filter(r=>(r._tags||r._tag).includes('stock_back')).length;
+  $('c-sm').textContent=s.same||0;
+}
+
+function setFilter(f, el){
+  S.curFilter=f;
+  document.querySelectorAll('.filter-bar .chip').forEach(c=>c.classList.remove('act'));
+  el.classList.add('act');
+  renderRows();
+}
+
+const TAG_LABEL = {up:'▲ 調漲',down:'▼ 調降',added:'＋ 新增',removed:'－ 移除',stock_lost:'🔴 缺貨',stock_back:'🟢 補貨',same:'＝ 相同'};
+
+function renderRows(){
+  const q=($('search-input').value||'').toLowerCase();
+  const od=$('tog-od').classList.contains('on');
+  let rows=S.results;
+  if(!rows.length){
+    $('rows-list').innerHTML='<div class="empty-state"><div class="empty-icon">☕</div><div class="empty-text">尚未比對</div><div class="empty-sub">請先上傳新舊報價單</div></div>';
+    return;
+  }
+  const f=S.curFilter;
+  if(f!=='all') rows=rows.filter(r=>f==='stock_lost'||f==='stock_back'?(r._tags||r._tag).includes(f):r._tag===f);
+  if(od) rows=rows.filter(r=>r._tag!=='same');
+  if(q) rows=rows.filter(r=>Object.values(r).some(v=>String(v||'').toLowerCase().includes(q)));
+
+  // Find price and name cols
+  const aLbl=S.stats.a_label||'新', bLbl=S.stats.b_label||'舊';
+  const nameCols=S.cols.filter(c=>c.includes('（'+aLbl+'）')&&(c.includes('名稱')||c.includes('品名')));
+  const priceCols=S.cols.filter(c=>c.includes('（'+aLbl+'）')&&isPriceCol(c.replace(/（[^）]+）/,'')));
+  const diffCols=S.cols.filter(c=>c.endsWith('_差異')&&isPriceCol(c.replace('_差異','')));
+  const nameColA=nameCols[0]||'';
+  const priceColA=priceCols[0]||'';
+  const priceColB=priceColA?priceColA.replace('（'+aLbl+'）','（'+bLbl+'）'):'';
+  const priceDiff=diffCols[0]||'';
+
+  if(!rows.length){
+    $('rows-list').innerHTML='<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">找不到符合的資料</div><div class="empty-sub">請調整篩選條件</div></div>';
+    return;
+  }
+
+  $('rows-list').innerHTML=rows.map(r=>{
+    const tags=(r._tags||r._tag||'same').split(',').filter(Boolean);
+    const primary=r._tag||'same';
+    const tagHtml=tags.filter(t=>t!=='same'||tags.length===1).map(t=>`<span class="tag ${t}">${TAG_LABEL[t]||t}</span>`).join('');
+    const name=esc(r[nameColA]||'');
+    const pNew=esc(r[priceColA]||'—');
+    const pOld=esc(r[priceColB]||'—');
+    const pdiff=r[priceDiff]||'';
+    const diffCls=pdiff.startsWith('↑')?'up':pdiff.startsWith('↓')?'down':primary;
+    const diffHtml=pdiff?`<span class="price-diff ${diffCls}">${esc(pdiff)}</span>`:`<span class="price-muted">—</span>`;
+
+    // stock col for display
+    const stockCols=S.cols.filter(c=>c.includes('（'+aLbl+'）')&&(isQtyCol(c.replace(/（[^）]+）/,''))||isStockCol(c.replace(/（[^）]+）/,''))));
+    const stockVal=stockCols.length?r[stockCols[0]]||'':'';
+    const showStock=isStock(stockVal);
+
+    return `<div class="row-card ${primary}" onclick="openDetail(${JSON.stringify(r._tag)}, event, this)">
+      <div class="rc-top">
+        <div class="rc-sku">${esc(r['料號/主鍵']||'')}</div>
+        <div class="rc-tags">${tagHtml}</div>
+      </div>
+      ${name?`<div class="rc-name">${name}</div>`:''}
+      <div class="rc-prices">
+        <div class="price-block"><div class="price-label">新版</div><div class="price-val">${pNew}</div></div>
+        <div class="price-block"><div class="price-label">舊版</div><div class="price-val" style="color:var(--hint)">${pOld}</div></div>
+        <div class="price-block"><div class="price-label">差異</div>${diffHtml}${showStock?`<div style="font-size:10px;color:var(--amber);margin-top:2px">${esc(stockVal)}</div>`:''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderSummary(){
+  const s=S.stats;
+  const cards=[
+    {cls:'total',lbl:'總筆數',n:s.a_rows,sub:'新版'},
+    {cls:'up',lbl:'調漲',n:s.up,sub:'價格上漲'},
+    {cls:'down',lbl:'調降',n:s.down,sub:'價格下降'},
+    {cls:'added',lbl:'新增',n:s.added,sub:'新版新增'},
+    {cls:'removed',lbl:'移除',n:s.removed,sub:'新版移除'},
+    {cls:'sl',lbl:'缺貨',n:s.stock_lost,sub:'補貨中/缺貨'},
+    {cls:'sb',lbl:'補貨',n:s.stock_back,sub:'重新可訂購'},
+    {cls:'same',lbl:'相同',n:s.same,sub:'無變動'},
+  ];
+  $('summary-scroll').innerHTML=`
+    <div class="stat-grid">${cards.map(c=>`
+      <div class="stat-card ${c.cls}">
+        <div class="stat-num">${c.n||0}</div>
+        <div class="stat-lbl">${c.lbl}</div>
+        <div class="stat-sub">${c.sub}</div>
+      </div>`).join('')}
+    </div>
+    <div class="info-card">
+      ${[['新報價單',s.a_label],['舊報價單',s.b_label],['比對主鍵',s.key_col],['差異合計',s.total_diff+' 筆']].map(([k,v])=>`
+      <div class="info-row"><span class="info-key">${k}</span><span class="info-val">${esc(String(v||''))}</span></div>`).join('')}
+    </div>`;
+}
+
+// ── Detail sheet ───────────────────────────────────────────────
+function openDetail(tag, e, el){
+  e.stopPropagation();
+  // Find the row data from the element
+  const sku = el.querySelector('.rc-sku').textContent.trim();
+  const row = S.results.find(r=>r['料號/主鍵']===sku);
+  if(!row) return;
+  const aLbl=S.stats.a_label||'新', bLbl=S.stats.b_label||'舊';
+  const nameCols=S.cols.filter(c=>c.includes('（'+aLbl+'）')&&(c.includes('名稱')||c.includes('品名')));
+  const name=row[nameCols[0]]||'';
+  const tags=(row._tags||row._tag||'same').split(',').filter(Boolean);
+  const tagHtml=tags.map(t=>`<span class="tag ${t}">${TAG_LABEL[t]||t}</span>`).join(' ');
+
+  const diffFields=S.cols.filter(c=>c.endsWith('_差異')).filter(c=>{
+    const v=row[c]; return v&&v!=='—'&&v!=='';
+  });
+  const allFields=S.cols.filter(c=>!c.startsWith('_')&&!c.endsWith('_差異')&&row[c]!==undefined&&row[c]!=='');
+
+  $('detail-content').innerHTML=`
+    <div class="detail-sku">${esc(sku)}</div>
+    <div class="detail-name">${esc(name)||esc(sku)}</div>
+    <div style="margin-bottom:14px">${tagHtml}</div>
+    ${diffFields.length?`
+    <div class="detail-section">
+      <div class="detail-section-title">差異欄位</div>
+      ${diffFields.map(c=>{
+        const v=row[c];
+        const cls=v.startsWith('↑')?'up':v.startsWith('↓')?'down':'';
+        return `<div class="detail-field">
+          <span class="detail-field-key">${esc(c.replace('_差異',''))}</span>
+          <span class="detail-field-val ${cls}">${esc(v)}</span>
+        </div>`;
+      }).join('')}
+    </div>`:''}
+    <div class="detail-section">
+      <div class="detail-section-title">所有欄位</div>
+      ${allFields.map(c=>`
+      <div class="detail-field">
+        <span class="detail-field-key">${esc(c)}</span>
+        <span class="detail-field-val">${esc(String(row[c]||''))}</span>
+      </div>`).join('')}
+    </div>`;
+  $('detail-overlay').classList.add('show');
+}
+
+function closeDetail(e){
+  if(e.target===$('detail-overlay')) $('detail-overlay').classList.remove('show');
+}
+
+// ── Export ─────────────────────────────────────────────────────
+function exportReport(){
+  if(!S.results.length){ alert('請先執行比對'); return; }
+  ov('匯出中…','建立 Excel 報告');
+  setTimeout(()=>{
+    try{
+      const wb = XLSX.utils.book_new();
+      // Main sheet
+      const mainData = S.results.map(r=>{
+        const obj={};
+        S.cols.filter(c=>!c.startsWith('_')).forEach(c=>obj[c]=r[c]||'');
+        obj['狀態']=TAG_LABEL[r._tag]||r._tag;
+        return obj;
+      });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(mainData), '比對結果');
+      // Stats sheet
+      const statsData=[
+        {項目:'新報價單',值:S.stats.a_label},{項目:'舊報價單',值:S.stats.b_label},
+        {項目:'總筆數',值:S.stats.a_rows},{項目:'調漲',值:S.stats.up},
+        {項目:'調降',值:S.stats.down},{項目:'新增',值:S.stats.added},
+        {項目:'移除',值:S.stats.removed},{項目:'缺貨',值:S.stats.stock_lost},
+        {項目:'補貨',值:S.stats.stock_back},{項目:'相同',值:S.stats.same},
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(statsData), '差異摘要');
+      XLSX.writeFile(wb, '比對報告_'+(new Date().toISOString().slice(0,10))+'.xlsx');
+      hv();
+    }catch(e){ hv(); alert('匯出失敗：'+e.message); }
+  }, 50);
+}
+
+function clearAll(){
+  S.new=null; S.old=null; S.results=[]; S.cols=[]; S.stats={};
+  ['new','old'].forEach(s=>{$('fc-'+s).innerHTML='';});
+  updateCompareBtn();
+  $('rows-list').innerHTML='<div class="empty-state"><div class="empty-icon">☕</div><div class="empty-text">尚未比對</div><div class="empty-sub">請先上傳新舊報價單</div></div>';
+  $('summary-scroll').innerHTML='<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-text">尚未比對</div><div class="empty-sub">請先執行比對以查看摘要</div></div>';
+  ['c-all','c-up','c-dn','c-add','c-rm','c-sl','c-sb','c-sm'].forEach(id=>$(id).textContent='0');
+  sw('home');
+  st('就緒');
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── Drag and drop ──────────────────────────────────────────────
+['new','old'].forEach(slot=>{
+  const dz=$('dz-'+slot);
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag')});
+  dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+  dz.addEventListener('drop',e=>{
+    e.preventDefault();dz.classList.remove('drag');
+    const f=e.dataTransfer.files[0];if(f)loadFile(slot,f);
+  });
+});
+
+// ── PWA ────────────────────────────────────────────────────────
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
