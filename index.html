@@ -162,6 +162,13 @@
   .dr.dr-total{font-weight:600;color:var(--text);border-top:1px solid var(--border);margin-top:4px;padding-top:4px}
   .divider{height:1px;background:var(--border);margin:14px 0}
   .info-hint{font-size:11px;color:var(--text3);margin-top:4px}
+
+/* ── Pull to Refresh ── */
+#ptr-indicator{position:fixed;top:0;left:0;right:0;z-index:9999;display:flex;align-items:center;justify-content:center;gap:8px;height:0;overflow:hidden;background:#1a4d8f;color:#fff;font-size:13px;font-weight:500;transition:height .15s ease;pointer-events:none}
+#ptr-indicator.visible{height:44px}
+#ptr-spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:ptrspin .7s linear infinite;display:none}
+#ptr-indicator.loading #ptr-spinner{display:block}
+@keyframes ptrspin{to{transform:rotate(360deg)}}
   .sheet-picker{margin-top:8px;display:none}
   .sheet-picker label{font-size:12px;color:var(--text2);margin-bottom:4px;display:block}
   .sheet-picker select{width:100%}
@@ -176,6 +183,7 @@
 </head>
 <body>
 
+<div id="ptr-indicator"><div id="ptr-spinner"></div><span id="ptr-text">↓ 下拉重新整理</span></div>
 <header class="header">
   <div class="brand">
     <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAA4AHsDASIAAhEBAxEB/8QAHAABAAIDAQEBAAAAAAAAAAAAAAEIBQYHBAID/8QAOxAAAQIFAgQDBAcHBQAAAAAAAQIDAAQFBhEHEhMhMUEIFFEyQnGBFRgiYYKRkxYXIzNSU1Zig6HT4f/EABsBAQACAwEBAAAAAAAAAAAAAAAEBQIDBgEH/8QAJREAAgIBBAIABwAAAAAAAAAAAQIAAwQFESExElETFBVBUmHh/9oADAMBAAIRAxEAPwDim2G2JhH0afOZG2G2Jh2hEjERiN5070rvO+m/M0amhuR3YM7NK4bWf9J6q+QxHRXvC7dqJcrbuOiOPY5I2Opz927/AMiHZnY9beLON5MrwcixfJV4nAsQxG0X/YV02ROpYuGmKYbdOGphs72Xfgsd/uODGGt6muVivSFJadSy5OzDculxYJCStWATjnEkWIy+YPEjtU6t4EczwYEMCLA/VaujtdNH/Qeifqt3QOt00f8AQeiF9Txfzk36XlfjK+4EMCLBfVbuf/KaP+g9Gj6u6RVbTmlyNQqNXkZ5M4+WQlhpaSkhO7J3cu0Z16hj2MEVtyZrs0/IqUsy8Cc1xDbEwibIUjbDbEwhEQhCEQY33Qax035qDLUyaCvo2WQZqex7yEkAI/EogfDMaEfSLG+B4sfTF0A7eN5eW2eu3c5n5ez/AMRD1G1qsZnXuTdOqW3IVW6nWdWtRqFpRb8pKsyTb046jZIU9khCQhPLKvRI6ZEcOlvE7eqagHZij0RyV3ZLKUrSoJ9AvJ5/fiMb4wEzqdXll/f5c05jy2fZ2fa3Y/F1+UYnR3R+s6gys1UuOKbTGkKQzMuN7uO8OiUj+kH2j2irxsTFrxhbfzv7lnk5eU+QaqeNvUtLbNctTWXTx0rlkPSkwnhTco7grl3MdPiOoV8IphfVvztk35P0NUw6H6e/lh9JKVKRyUhYx0OCPyiwHhKt24rWvC76RW5R2VTLtMBwHJbW5uVhSFdFAp7xrmvMtbk74mKZKXG80zS1ysumouFzhgDas81dvdjHCYY+U9aHdNt5nmKcjGSxxs2+06TY9BpDmj9v3HPUm4a7PzEgw48iTqL5edUvqrBdSnvz5iMnbtFt2r1Pybtj3pShsUrzE9PPJb5dspfUcntyj2W8qy5GgSEnRLqq6KY0wlEqGH3FIDY6bTsORHvE7QOv7WV4jH9xz/rioe1iW77PuWiVqAvXQ9TTtKw7IeIS+6GxNTqqbJyUsZeXfmVupbKsEkbyTzJMcC8SNQqD+rtxSL89NOyjE2kssqcJbQeEnOE9B1i0tiytgNX/AFeeolZM7cs5LpE8l6YUp0tpxglJAxyx29I434saFYUkqcqslMoF3TM4yqZY8ySrhqR7Wzp0AixwLl+bG4PIA/sgZ1LfKHYjgk/yV0iYiJjqJy8QhCERCEIRBjetDb4Fg6gStXmApVPeQZaeSnmQ0og7gPVJAPwBjRYg+kYW1LahRujNlVrVOHXsS9ep2n9t6tWzJzCJxCHkI4lOqTGF4Ch0I95B9OoMaxofptqDp9WnZSYrtJn7cfJL0t/F3hXZaARhJPcZwYrXYGpd42OC1QqoUSpOVSj44jBPqEnofhjMdEc8Tt8KluGikUJtwj+dw3Dg+u0qxHPNp+YiGlCCh9zoE1DEdha4IYepb0IT7YH2vX1igOtDlwO6nVuYueSVJ1ByYKuD1SGxyRsPdO0Dn6mNnoHiB1Ep1Ym6hOTktVW5lIHlX0FLTRB5FsJ5j84xeqOq89qFT2WKxbdGYmZdWWJyW4gdbHdOSeYPoeXeNun4N+JbuQCD9/U1ahnUZVWykgj7SxmnNwyKdErap1Oveh0SqN05hKnJlxtzh4H2gUFQ5xmbbuB+UqPHruq1sVOT4ZAYabZYVuPQ7g4enPlFFNo64H5RGEj3Ekd+UbG0VSSfLv8AQmtdZYADx6/ZlwLBkZ2Y8UFzXI1KPO0abp4TLVBCNzD2EtDCXByVgpUOXcGOL+LID999TI6+Ulhn/bEfrZuvl1WrZ8jbVNpNJUzJNFtp54LKupOSAcHmY5xddfql0XBN1ytTHmJ6aVlxQTtAAGEhI7ACM8PDuTI+I44A2Ewy8up8f4aHknczFRMBCLiU8QhDMN4A3iEIQiIQhCIiOcIQiIQhCJMIQhEQ7QhHsSImEI8iO8fSUAjJ5fPEIQET/9k=" alt="Q哥" style="height:36px;width:auto;object-fit:contain">
@@ -1176,6 +1184,53 @@ function calcProfit(){
 
 buildCatSelect();
 calcProfit();
+
+
+(function(){
+  let startY=0,pulling=false,threshold=65,triggered=false;
+  const ind=document.getElementById('ptr-indicator');
+  const txt=document.getElementById('ptr-text');
+
+  function canPull(){
+    return window.scrollY<=0;
+  }
+
+  document.addEventListener('touchstart',e=>{
+    if(!canPull())return;
+    startY=e.touches[0].clientY;
+    pulling=true;triggered=false;
+  },{passive:true});
+
+  document.addEventListener('touchmove',e=>{
+    if(!pulling||triggered)return;
+    const dy=e.touches[0].clientY-startY;
+    if(dy<=0){pulling=false;return;}
+    const pct=Math.min(dy/threshold,1);
+    ind.style.height=(pct*44)+'px';
+    ind.classList.toggle('visible',dy>20);
+    if(dy>=threshold){
+      txt.textContent='↑ 放開以重新整理';
+    }else{
+      txt.textContent='↓ 繼續下拉重新整理';
+    }
+  },{passive:true});
+
+  document.addEventListener('touchend',e=>{
+    if(!pulling)return;
+    pulling=false;
+    const dy=e.changedTouches[0].clientY-startY;
+    if(dy>=threshold&&!triggered){
+      triggered=true;
+      ind.classList.add('visible','loading');
+      ind.style.height='44px';
+      txt.textContent='重新整理中...';
+      setTimeout(()=>location.reload(),600);
+    }else{
+      ind.classList.remove('visible','loading');
+      ind.style.height='0';
+    }
+  },{passive:true});
+})();
 </script>
 </body>
 </html>
