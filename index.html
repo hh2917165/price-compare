@@ -246,6 +246,7 @@
 
       <div style="display:flex;gap:8px">
         <button class="btn btn-primary" style="flex:1" onclick="runCompare()">⚖ 開始比對</button>
+        <button class="btn btn-ghost" id="btn-export" onclick="exportExcel()" style="display:none" title="匯出 Excel">⬇ 匯出</button>
         <button class="btn btn-danger" onclick="resetAll()">🗑</button>
       </div>
     </div>
@@ -555,14 +556,42 @@ function rawToStore(raw,filename,sheetName){
   return{cols,rows,label};
 }
 
+function mergeAllSheets(wb,filename){
+  // 合併所有分頁成單一資料集
+  let mergedRows=null, mergedCols=null;
+  wb.SheetNames.forEach(sn=>{
+    const raw=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:''});
+    const store=rawToStore(raw,filename,sn);
+    if(!mergedCols){
+      mergedCols=store.cols;
+      mergedRows=store.rows;
+    }else{
+      // 只合併欄位相同的分頁（用 detectHeaderRow 對齊）
+      store.rows.forEach(r=>{
+        const mapped={};
+        mergedCols.forEach(col=>{
+          mapped[col]=r[col]!==undefined?r[col]:(store.cols.includes(col)?r[col]:'');
+        });
+        mergedRows.push(mapped);
+      });
+    }
+  });
+  return{cols:mergedCols||[],rows:mergedRows||[],label:filename.replace(/\.[^.]+$/,'')+'[全部分頁]'};
+}
+
 function applySheet(id){
   const sel=document.getElementById('sheet-sel-'+id);
   const sheetName=sel.value;
   const cached=wbCache[id];
   if(!cached)return;
-  const ws=cached.wb.Sheets[sheetName];
-  const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-  const store=rawToStore(raw,cached.filename,sheetName);
+  let store;
+  if(sheetName==='__ALL__'){
+    store=mergeAllSheets(cached.wb,cached.filename);
+  }else{
+    const ws=cached.wb.Sheets[sheetName];
+    const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+    store=rawToStore(raw,cached.filename,sheetName);
+  }
   if(id==='new')dataNew=store;else dataOld=store;
 }
 
@@ -590,7 +619,7 @@ function parseFile(file,id){
       const picker=document.getElementById('sheet-picker-'+id);
       const sel=document.getElementById('sheet-sel-'+id);
       if(sheets.length>1){
-        sel.innerHTML=sheets.map(s=>`<option value="${s}">${s}</option>`).join('');
+        sel.innerHTML=`<option value="__ALL__">📋 全部分頁（合併）</option>`+sheets.map(s=>`<option value="${s}">${s}</option>`).join('');
         sel.value=bestSheet;
         picker.style.display='block';
       }else{
@@ -743,6 +772,9 @@ function runCompare(){
   updateFilterTabs(counts);
   renderResults(allResults,onlyDiff);
   renderSummary(counts,allResults);
+  // 顯示匯出按鈕
+  const exportBtn=document.getElementById('btn-export');
+  if(exportBtn)exportBtn.style.display='';
 }
 
 function updateFilterTabs(counts){
@@ -828,6 +860,37 @@ function renderSummary(counts,rows){
   </div>`;
 }
 
+function exportExcel(){
+  if(!allResults.length){alert('請先執行比對');return;}
+  const wb=XLSX.utils.book_new();
+  // 建立資料列
+  const header=['品名','條碼/料號','舊售價','新售價','售價異動','舊進價','新進價','進價異動','狀態'];
+  const labelMap2={up:'▲ 調漲',down:'▼ 調降',new:'＋ 新增',del:'－ 移除',oos:'🔴 缺貨',changed:'✏️ 異動',same:'＝ 相同'};
+  const data=[header,...allResults.map(r=>{
+    const priceChg=r.change!==''&&r.change!==null?(r.change>0?'▲ +'+r.change:'▼ '+r.change):'';
+    const costChg=r.costChange!==''&&r.costChange!==null?(r.costChange>0?'▲ +'+r.costChange:'▼ '+r.costChange):'';
+    return[
+      r.name||r.key,
+      r.barcode||'',
+      r.priceOld||'',
+      r.priceNew||'',
+      priceChg,
+      r.costOld||'',
+      r.costNew||'',
+      costChg,
+      labelMap2[r.type]||r.type
+    ];
+  })];
+  const ws=XLSX.utils.aoa_to_sheet(data);
+  // 欄寬
+  ws['!cols']=[{wch:30},{wch:18},{wch:9},{wch:9},{wch:10},{wch:9},{wch:9},{wch:10},{wch:10}];
+  XLSX.utils.book_append_sheet(wb,ws,'比對結果');
+  // 下載
+  const now=new Date();
+  const ts=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+  XLSX.writeFile(wb,`報價比對_${ts}.xlsx`);
+}
+
 function resetAll(){
   dataNew=null;dataOld=null;allResults=[];
   ['new','old'].forEach(id=>{
@@ -839,6 +902,7 @@ function resetAll(){
   document.getElementById('result-area').innerHTML='<div class="empty-state"><div class="es-icon" style="font-size:36px">🎮</div><div class="es-text">尚未比對<br><span style="font-size:12px">請先上傳新舊報價單</span></div></div>';
   document.getElementById('summary-area').innerHTML='<div class="empty-state"><div class="es-icon">📊</div><div class="es-text">尚未比對</div></div>';
   ['s-all','s-up','s-down','s-new'].forEach(id=>document.getElementById(id).textContent='0');
+  const eb=document.getElementById('btn-export');if(eb)eb.style.display='none';
 }
 
 /* ═══════════════════════════════════
