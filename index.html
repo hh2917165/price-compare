@@ -145,7 +145,7 @@
   .r-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;transition:.2s}
   .r-card.profit-pos{border-color:var(--accent2);background:var(--accent-bg)}
   .r-card.profit-neg{border-color:var(--red-bdr);background:var(--red-bg)}
-  .r-card .store{font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.04em;margin-bottom:2px}
+  .r-card .store{font-size:14px;font-weight:700;color:var(--text);letter-spacing:.01em;margin-bottom:4px}
   .r-card .profit-main{font-size:30px;font-weight:700;color:var(--text);letter-spacing:-.01em;line-height:1;margin-bottom:2px}
   .r-card.profit-pos .profit-main{color:var(--accent)}
   .r-card.profit-neg .profit-main{color:var(--red)}
@@ -338,18 +338,7 @@
           </div>
         </div>
         <div class="info-hint" style="margin-bottom:8px">選類別後自動帶入，可手動覆蓋</div>
-        <div class="divider"></div>
-        <div class="card-title">🎟 固定折價券</div>
-        <div class="field-pair">
-          <div class="field-group">
-            <label>888 折價券 (X)</label>
-            <input type="number" id="p-v888" value="0" min="0" oninput="calcProfit()">
-          </div>
-          <div class="field-group">
-            <label>588/909 折價券 (Y/Z)</label>
-            <input type="number" id="p-v588" value="0" min="0" oninput="calcProfit()">
-          </div>
-        </div>
+
       </div>
 
     </div>
@@ -362,7 +351,7 @@
         <div style="font-size:12px;color:var(--text2);line-height:1.9">
           <div>• 金流 2.5% 含運費計算</div>
           <div>• QEK888 超商免運 6%（T欄）</div>
-          <div>• QEK588/909：售價 ≥490 扣90；≥190 扣45；&lt;190 不扣</div>
+          <div>• QEK588/909：售價≥490 宅配免運扣90；售價≥190 超商免運扣45；售價&lt;190 不扣</div>
           <div>• QEK910：固定扣宅配 90</div>
           <div>• 一般手續費上限：MIN(售價,35000)×費率</div>
         </div>
@@ -1034,8 +1023,8 @@ function fmtMoney(n){
 // 每個賣場獨立的開關狀態
 const storeState={
   '888':{coin:true,cvs:true},
-  '588':{coin:true,ship:true},
-  '909':{coin:true,ship:true},
+  '588':{coin:true,ship90:true,ship45:true},
+  '909':{coin:true,ship90:true,ship45:true},
   '910':{coin:true,ship:true},
 };
 
@@ -1049,8 +1038,10 @@ function calcProfit(){
   const cost=parseFloat(document.getElementById('p-cost').value)||0;
   const feeMallPct=(parseFloat(document.getElementById('p-fee-mall').value)||0)/100;
   const feeGenPct=(parseFloat(document.getElementById('p-fee-gen').value)||0)/100;
-  const v888=parseFloat(document.getElementById('p-v888').value)||0;
-  const v588=parseFloat(document.getElementById('p-v588').value)||0;
+  // 折價券從各賣場卡片讀取（910 無折價券）
+  const v888=parseFloat(document.getElementById('pv-888')?document.getElementById('pv-888').value:0)||0;
+  const v588=parseFloat(document.getElementById('pv-588')?document.getElementById('pv-588').value:0)||0;
+  const v909=parseFloat(document.getElementById('pv-909')?document.getElementById('pv-909').value:0)||0;
 
   // 毛利率
   const grossEl=document.getElementById('p-gross');
@@ -1067,8 +1058,14 @@ function calcProfit(){
   const ship910fixed=90; // 910 固定宅配
 
   const cvs888=storeState['888'].cvs?ship888cvs:0;
-  const act588=storeState['588'].ship?shipAuto:0;
-  const act909=storeState['909'].ship?shipAuto:0;
+  // 588/909：依售價選扣90或45，各有獨立開關
+  function calcShip(sid){
+    if(shipAuto===90) return storeState[sid].ship90?90:0;
+    if(shipAuto===45) return storeState[sid].ship45?45:0;
+    return 0;
+  }
+  const act588=calcShip('588');
+  const act909=calcShip('909');
   const act910=storeState['910'].ship?ship910fixed:0;
 
   // 金流 = (售價 + 對應運費) × 2.5%
@@ -1084,16 +1081,39 @@ function calcProfit(){
 
   const p888=price-cost-mallFee-flow888-coin888-cvs888-v888;
   const p588=price-cost-mallFee-flow588-coin588-act588-v588;
-  const p909=price-cost-mallFee-flow909-coin909-act909-v588;
-  const p910=price-cost-genFee-flow910-coin910-act910;
+  const p909=price-cost-mallFee-flow909-coin909-act909-v909;
+  const p910=price-cost-genFee-flow910-coin910-act910; // 910無折價券
 
-  const shipLabel=shipAuto===90?'宅配（≥490→90）':shipAuto===45?'宅配（≥190→45）':'宅配（<190→0）';
+  function getShipLabel(sid){
+    if(shipAuto===90) return storeState[sid].ship90?'售價≥490 宅配免運扣90':'售價≥490 宅配免運扣90（關）';
+    if(shipAuto===45) return storeState[sid].ship45?'售價≥190 超商免運扣45':'售價≥190 超商免運扣45（關）';
+    return '售價<190 不扣';
+  }
   const stores=[
-    {id:'888',name:'QEK888　商城超商',profit:p888,
-     toggles:[
-       {key:'coin',label:'蝦幣5%'},
-       {key:'cvs',label:'超商免運6%'},
-     ],
+    {id:'909',name:'Q哥電玩商城 (909)',profit:p909,voucher:v909,
+     toggles:[{key:'coin',label:'蝦幣10%'},{key:'ship90',label:'宅配-90'},{key:'ship45',label:'超商-45'}],
+     bd:[
+      {l:'售價',v:price},
+      {l:'成本',v:cost,neg:1},
+      {l:'商城手續費 '+((feeMallPct*100).toFixed(2))+'%',v:mallFee,neg:1},
+      {l:getShipLabel('909'),v:act909,neg:1,dim:act909===0&&shipAuto>0},
+      {l:'金流 2.5%（含運）',v:flow909,neg:1},
+      {l:'蝦幣 10%（+3%）',v:coin909,neg:1,dim:!storeState['909'].coin},
+      {l:'固定折價券',v:v909,neg:1},
+    ]},
+    {id:'588',name:'Q哥資訊商城 (588)',profit:p588,voucher:v588,
+     toggles:[{key:'coin',label:'蝦幣5%'},{key:'ship90',label:'宅配-90'},{key:'ship45',label:'超商-45'}],
+     bd:[
+      {l:'售價',v:price},
+      {l:'成本',v:cost,neg:1},
+      {l:'商城手續費 '+((feeMallPct*100).toFixed(2))+'%',v:mallFee,neg:1},
+      {l:getShipLabel('588'),v:act588,neg:1,dim:act588===0&&shipAuto>0},
+      {l:'金流 2.5%（含運）',v:flow588,neg:1},
+      {l:'蝦幣 5%（+1.5%）',v:coin588,neg:1,dim:!storeState['588'].coin},
+      {l:'固定折價券',v:v588,neg:1},
+    ]},
+    {id:'888',name:'Q哥手機配件商城 (888)',profit:p888,voucher:v888,
+     toggles:[{key:'coin',label:'蝦幣5%'},{key:'cvs',label:'超商免運6%'}],
      bd:[
       {l:'售價',v:price},
       {l:'成本',v:cost,neg:1},
@@ -1103,39 +1123,8 @@ function calcProfit(){
       {l:'蝦幣 5%（+1.5%）',v:coin888,neg:1,dim:!storeState['888'].coin},
       {l:'固定折價券',v:v888,neg:1},
     ]},
-    {id:'588',name:'QEK588　商城宅配',profit:p588,
-     toggles:[
-       {key:'coin',label:'蝦幣5%'},
-       {key:'ship',label:'免運'},
-     ],
-     bd:[
-      {l:'售價',v:price},
-      {l:'成本',v:cost,neg:1},
-      {l:'商城手續費 '+((feeMallPct*100).toFixed(2))+'%',v:mallFee,neg:1},
-      {l:shipLabel,v:act588,neg:1,dim:!storeState['588'].ship},
-      {l:'金流 2.5%（含運）',v:flow588,neg:1},
-      {l:'蝦幣 5%（+1.5%）',v:coin588,neg:1,dim:!storeState['588'].coin},
-      {l:'固定折價券',v:v588,neg:1},
-    ]},
-    {id:'909',name:'QEK909　商城宅配',profit:p909,
-     toggles:[
-       {key:'coin',label:'蝦幣10%'},
-       {key:'ship',label:'免運'},
-     ],
-     bd:[
-      {l:'售價',v:price},
-      {l:'成本',v:cost,neg:1},
-      {l:'商城手續費 '+((feeMallPct*100).toFixed(2))+'%',v:mallFee,neg:1},
-      {l:shipLabel,v:act909,neg:1,dim:!storeState['909'].ship},
-      {l:'金流 2.5%（含運）',v:flow909,neg:1},
-      {l:'蝦幣 10%（+3%）',v:coin909,neg:1,dim:!storeState['909'].coin},
-      {l:'固定折價券',v:v588,neg:1},
-    ]},
-    {id:'910',name:'QEK910　一般宅配',profit:p910,
-     toggles:[
-       {key:'coin',label:'蝦幣10%'},
-       {key:'ship',label:'宅配90'},
-     ],
+    {id:'910',name:'Q哥資訊賣場 (910)',profit:p910,voucher:0,
+     toggles:[{key:'coin',label:'蝦幣10%'},{key:'ship',label:'宅配90'}],
      bd:[
       {l:'售價',v:price},
       {l:'成本',v:cost,neg:1},
@@ -1143,6 +1132,7 @@ function calcProfit(){
       {l:'宅配（固定90）',v:act910,neg:1,dim:!storeState['910'].ship},
       {l:'金流 2.5%（含運）',v:flow910,neg:1},
       {l:'蝦幣 10%（+3%）',v:coin910,neg:1,dim:!storeState['910'].coin},
+
     ]},
   ];
 
@@ -1164,6 +1154,7 @@ function calcProfit(){
     }).join('');
     bdRows+=`<div class="dr dr-total">利潤<span>${fmtMoney(s.profit)}</span></div>`;
 
+    const defVoucher=s.id==='888'?50:10;
     html+=`<div class="r-card ${cls}">
       <div class="store-toggle-row">
         <div class="store">${s.name}</div>
@@ -1171,6 +1162,12 @@ function calcProfit(){
       </div>
       <div class="profit-main">${fmtMoney(s.profit)}</div>
       <div class="margin">利潤率 ${pct}%</div>
+      ${s.id!=='910'?`<div style="display:flex;align-items:center;gap:8px;margin:6px 0 2px;padding-top:6px;border-top:1px solid var(--border);font-size:12px;color:var(--text2)">
+        <span>🎟 折價券</span>
+        <input type="number" id="pv-${s.id}" value="${s.voucher||defVoucher}" min="0" step="1"
+          style="width:56px;padding:2px 5px;font-size:11px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);text-align:right"
+          oninput="calcProfit()">
+      </div>`:''}
       <div class="detail-rows open">${bdRows}</div>
     </div>`;
   }
