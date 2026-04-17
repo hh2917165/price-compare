@@ -1312,73 +1312,133 @@ function clearAiHint(){
   if(h){h.style.display='none';h.textContent='';}
 }
 
-async function aiGuessCategory(){
+// ── 關鍵字比對表：商品名稱關鍵字 → {cat, sub} ──
+const KW_MAP = [
+  // 電玩遊戲
+  {kw:['switch','ps5','ps4','xbox','nintendo','遊戲主機','主機'],cat:'電玩遊戲',sub:'電玩主機'},
+  {kw:['遊戲片','game','遊戲軟體','ns遊戲'],cat:'電玩遊戲',sub:'主機遊戲'},
+  {kw:['手把','控制器','搖桿','耳機罩','主機周邊','遊戲周邊'],cat:'電玩遊戲',sub:'主機周邊'},
+  // 電腦
+  {kw:['筆電','筆記型','laptop','notebook','macbook'],cat:'電腦與周邊配件',sub:'筆記型電腦'},
+  {kw:['桌電','桌上型','desktop','主機板','機殼'],cat:'電腦與周邊配件',sub:'桌上型電腦'},
+  {kw:['螢幕','顯示器','monitor'],cat:'電腦與周邊配件',sub:'螢幕顯示器'},
+  {kw:['硬碟','ssd','hdd','記憶卡','隨身碟','nvme'],cat:'電腦與周邊配件',sub:'儲存裝置'},
+  {kw:['顯卡','cpu','ram','記憶體','顯示卡','電源供應','散熱'],cat:'電腦與周邊配件',sub:'電腦零組件'},
+  {kw:['鍵盤','滑鼠','keyboard','mouse','cherry','mx'],cat:'電腦與周邊配件',sub:'鍵盤滑鼠'},
+  {kw:['印表機','掃描機','printer','scanner'],cat:'電腦與周邊配件',sub:'列印機/掃描機'},
+  {kw:['路由器','分享器','網路','交換器','wifi','無線網路'],cat:'電腦與周邊配件',sub:'網路設備'},
+  {kw:['軟體','windows','office','防毒'],cat:'電腦與周邊配件',sub:'軟體'},
+  // 手機平板
+  {kw:['iphone','samsung','手機','android','pixel','oppo','vivo','小米'],cat:'手機平板與周邊',sub:'手機'},
+  {kw:['ipad','平板','tablet'],cat:'手機平板與周邊',sub:'平板電腦'},
+  {kw:['apple watch','watch','smartwatch','智慧手錶','手環','穿戴'],cat:'手機平板與周邊',sub:'穿戴裝置'},
+  {kw:['手機殼','保護貼','充電器','傳輸線','手機支架','手機配件'],cat:'手機平板與周邊',sub:'手機周邊配件'},
+  // 相機
+  {kw:['相機','camera','sony a','canon','nikon','fuji','mirrorless'],cat:'相機&空拍機',sub:'相機'},
+  {kw:['鏡頭','lens'],cat:'相機&空拍機',sub:'鏡頭'},
+  {kw:['空拍機','drone','dji','無人機'],cat:'相機&空拍機',sub:'空拍機'},
+  // 影音
+  {kw:['耳機','headphone','earphone','airpods','earbud'],cat:'影音',sub:'耳機/耳麥/藍牙耳機'},
+  {kw:['喇叭','音響','speaker','soundbar'],cat:'影音',sub:'音響/喇叭'},
+  {kw:['麥克風','microphone'],cat:'影音',sub:'麥克風'},
+  // 家電
+  {kw:['冰箱','洗衣機','冷氣','冷凍','大型家電'],cat:'家用電器',sub:'大型家電'},
+  {kw:['電視','tv','television'],cat:'家用電器',sub:'電視機與周邊配件'},
+  {kw:['投影機','projector'],cat:'家用電器',sub:'投影機與周邊配件'},
+  {kw:['電飯鍋','氣炸鍋','烤箱','微波爐','廚房家電'],cat:'家用電器',sub:'廚房家電'},
+  {kw:['吸塵器','電扇','除濕機','空氣清淨','生活家電'],cat:'家用電器',sub:'生活家電'},
+  {kw:['遙控器'],cat:'家用電器',sub:'遙控器'},
+  {kw:['電池'],cat:'家用電器',sub:'電池'},
+  // 愛好收藏
+  {kw:['公仔','figure','模型','figma','gsc','good smile','nendoroid','黏土人','pop up parade'],cat:'愛好與收藏品',sub:'公仔'},
+  {kw:['組裝模型','gunpla','鋼彈','模型套件'],cat:'愛好與收藏品',sub:'組裝模型'},
+  {kw:['動漫周邊','周邊','抱枕','徽章','壓克力'],cat:'愛好與收藏品',sub:'動漫周邊'},
+  {kw:['卡牌','pokemon','寶可夢','遊戲王','集換式'],cat:'愛好與收藏品',sub:'玩具與遊戲'},
+  {kw:['cd','dvd','藍光','blu-ray'],cat:'愛好與收藏品',sub:'CD, DVD 與藍光光碟'},
+  {kw:['黑膠'],cat:'愛好與收藏品',sub:'黑膠唱片'},
+  // 保健
+  {kw:['口罩','消毒','酒精','防蚊'],cat:'保健',sub:'其他'},
+  {kw:['保健食品','維他命','魚油','葉黃素','益生菌'],cat:'保健',sub:'保健食品、營養品'},
+  {kw:['按摩槍','按摩器'],cat:'保健',sub:'按摩器材、按摩槍'},
+  // 美妝
+  {kw:['口紅','粉底','眼影','彩妝','化妝'],cat:'美妝保養',sub:'彩妝'},
+  {kw:['乳液','保養','面膜','精華液','護膚'],cat:'美妝保養',sub:'肌膚保養'},
+  {kw:['洗髮','護髮','髮膜'],cat:'美妝保養',sub:'美髮護理'},
+  {kw:['香水','香氛'],cat:'美妝保養',sub:'香水、香氛'},
+  // 寵物
+  {kw:['狗糧','貓糧','寵物食品','寵物零食'],cat:'寵物',sub:'寵物食品'},
+  {kw:['貓砂','貓廁'],cat:'寵物',sub:'寵物廁所相關&貓砂'},
+  {kw:['寵物'],cat:'寵物',sub:'寵物配件'},
+  // 汽機車
+  {kw:['輪胎','鋁圈'],cat:'汽車類',sub:'輪胎及周邊'},
+  {kw:['機車','摩托車','gogoro','光陽'],cat:'機車類',sub:'機車'},
+  {kw:['汽車','car','車用'],cat:'汽車類',sub:'汽車'},
+  // 服飾
+  {kw:['t恤','上衣','polo衫','男裝'],cat:'男生衣著',sub:'上衣'},
+  {kw:['女裝','洋裝','裙'],cat:'女生衣著',sub:'裙裝'},
+  {kw:['球鞋','sneaker','nike','adidas','new balance'],cat:'男鞋',sub:'休閒鞋款'},
+  {kw:['包包','後背包','托特包','手提包'],cat:'女生包包/精品',sub:'後背包'},
+  // 居家
+  {kw:['桌子','椅子','書桌','沙發','傢俱','家具'],cat:'居家生活',sub:'傢俱'},
+  {kw:['燈','燈泡','led','台燈'],cat:'居家生活',sub:'燈具'},
+  {kw:['鍋','炒鍋','湯鍋','不沾鍋'],cat:'居家生活',sub:'鍋具、餐廚/烘焙/咖啡用具、廚房收納'},
+  {kw:['收納','置物'],cat:'居家生活',sub:'收納'},
+  {kw:['清潔','拖把','掃把','掃地'],cat:'居家生活',sub:'拖把'},
+  // 文具
+  {kw:['鋼筆','原子筆','鉛筆','文具'],cat:'文具、美術用具',sub:'文具用品、修正用品'},
+  // 書籍
+  {kw:['書','小說','漫畫','雜誌'],cat:'書籍及雜誌期刊',sub:'書籍'},
+  // 食品
+  {kw:['零食','餅乾','糖果','泡麵','飲料','咖啡','茶葉'],cat:'美食、伴手禮',sub:'休閒零食'},
+];
+
+function guessCategory(text){
+  if(!text)return null;
+  const t=text.toLowerCase();
+  let best=null, bestScore=0;
+  for(const item of KW_MAP){
+    for(const kw of item.kw){
+      if(t.includes(kw.toLowerCase())){
+        const score=kw.length; // 較長的關鍵字優先
+        if(score>bestScore){bestScore=score;best=item;}
+      }
+    }
+  }
+  return best;
+}
+
+function aiGuessCategory(){
   const ean=(document.getElementById('p-ean').value||'').trim();
   const name=(document.getElementById('p-pname').value||'').trim();
   if(!ean&&!name){
     showAiHint('請輸入條碼或商品名稱','warn');return;
   }
   const btn=document.getElementById('btn-ai-guess');
-  btn.disabled=true;btn.textContent='🤖 判斷中...';
-  showAiHint('AI 分析中，請稍候...','info');
+  btn.disabled=true;
 
-  // 建立 FEE_DATA 類別清單供 AI 參考
-  const cats=[...new Set(FEE_DATA.map(d=>d.cat))];
-  const catMap={};
-  FEE_DATA.forEach(d=>{if(!catMap[d.cat])catMap[d.cat]=[];catMap[d.cat].push(d.sub);});
-  const catList=cats.map(cat=>`${cat}：${catMap[cat].join('、')}`).join('\n');
+  const searchText=name||ean;
+  const result=guessCategory(searchText);
 
-  const prompt=`你是蝦皮電商平台的商品分類專家。
-以下是蝦皮手續費類別清單：
-${catList}
-
-請根據以下資訊，判斷最適合的「大類」和「細類」：
-${ean?'國際條碼：'+ean:''}
-${name?'商品名稱：'+name:''}
-${ean?'請搜尋此條碼判斷是什麼商品。':''}
-
-請只回覆 JSON 格式，不要其他文字：
-{"cat":"大類名稱","sub":"細類名稱","reason":"判斷原因（中文，20字內）"}`;
-
-  try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:200,
-        tools:ean?[{type:'web_search_20250305',name:'web_search'}]:[],
-        messages:[{role:'user',content:prompt}]
-      })
-    });
-    const data=await res.json();
-    // 取 text 內容
-    const text=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
-    const jsonMatch=text.match(/\{[\s\S]*\}/);
-    if(!jsonMatch)throw new Error('無法解析回應');
-    const result=JSON.parse(jsonMatch[0]);
-
-    // 設定大類
+  if(result){
     const catSel=document.getElementById('p-cat');
-    const catOpt=[...catSel.options].find(o=>o.value===result.cat||o.text===result.cat);
+    const catOpt=[...catSel.options].find(o=>o.value===result.cat);
     if(catOpt){
-      catSel.value=catOpt.value;
+      catSel.value=result.cat;
       onCatChange();
-      // 設定細類
       setTimeout(()=>{
         const subSel=document.getElementById('p-sub');
-        const subOpt=[...subSel.options].find(o=>o.value===result.sub||o.text.includes(result.sub)||result.sub.includes(o.value));
+        const subOpt=[...subSel.options].find(o=>o.value===result.sub||o.text.includes(result.sub));
         if(subOpt){subSel.value=subOpt.value;onSubChange();}
-        showAiHint(`✓ 判斷完成：${result.cat} › ${result.sub}｜${result.reason}`,'ok');
+        showAiHint(`✓ 判斷完成：${result.cat} › ${result.sub}`,'ok');
       },100);
     }else{
-      showAiHint(`⚠ 找不到對應類別「${result.cat}」，請手動選擇`,'warn');
+      showAiHint(`⚠ 找不到對應類別，請手動選擇`,'warn');
     }
-  }catch(err){
-    showAiHint('❌ 判斷失敗：'+err.message,'err');
-  }finally{
-    btn.disabled=false;btn.textContent='🤖 AI 判斷';
+  }else{
+    showAiHint('⚠ 無法自動判斷，請手動選擇類別','warn');
   }
+
+  btn.disabled=false;
 }
 
 function showAiHint(msg,type){
