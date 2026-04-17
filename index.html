@@ -3,62 +3,62 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Q哥工具箱</title>
+<title>Q哥工具箱 | QEK TOOLKIT</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
-    --bg:        #f5f0e8;
-    --bg2:       #ede6d6;
-    --bg3:       #e4dbc8;
-    --surface:   #fdf9f3;
-    --surface2:  #f9f3e8;
-    --border:    #d6cbb5;
-    --border2:   #c4b89a;
-    --text:      #3d3020;
-    --text2:     #7a6a52;
-    --text3:     #a89880;
-    --accent:    #8b6f47;
-    --accent2:   #6b5035;
-    --accent-bg: #ede0cc;
-    --green:     #4a7c59;
-    --green-bg:  #e8f3ec;
-    --green-bdr: #b8d9c4;
-    --red:       #9b3a2a;
-    --red-bg:    #fdf0ed;
-    --red-bdr:   #f0c4bb;
-    --yellow:    #8a6d1f;
-    --yellow-bg: #fdf6e3;
-    --yellow-bdr:#e8d48a;
+    --bg:        #eef3fa;
+    --bg2:       #dce8f5;
+    --bg3:       #ccdaf0;
+    --surface:   #ffffff;
+    --surface2:  #f4f8fd;
+    --border:    #c5d5ea;
+    --border2:   #a5bedd;
+    --text:      #0c1e3c;
+    --text2:     #3a5478;
+    --text3:     #6a88b0;
+    --accent:    #1a4d8f;
+    --accent2:   #0f3566;
+    --accent-bg: #dde8f8;
+    --green:     #1a6e3c;
+    --green-bg:  #e4f5ed;
+    --green-bdr: #8ecfac;
+    --red:       #a01c1c;
+    --red-bg:    #fdf0f0;
+    --red-bdr:   #edaaaa;
+    --yellow:    #7a5e10;
+    --yellow-bg: #fdf7e3;
+    --yellow-bdr:#e0c870;
     --radius:    10px;
     --radius-sm: 6px;
-    --shadow:    0 1px 3px rgba(61,48,32,.08);
-    --shadow-md: 0 4px 12px rgba(61,48,32,.12);
+    --shadow:    0 1px 4px rgba(13,31,60,.08);
+    --shadow-md: 0 4px 16px rgba(13,31,60,.13);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',system-ui,sans-serif;font-size:14px;min-height:100vh}
   /* ── Header ── */
-  .header{background:var(--surface);border-bottom:1.5px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:0;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+  .header{background:#1a4d8f;border-bottom:none;padding:0 20px;display:flex;align-items:center;gap:0;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(13,31,60,.25)}
   .brand{display:flex;align-items:center;gap:8px;padding:14px 0;margin-right:24px;flex-shrink:0}
   .brand-icon{font-size:20px;line-height:1}
-  .brand-name{font-size:15px;font-weight:700;color:var(--accent2);letter-spacing:.02em}
+  .brand-name{font-size:15px;font-weight:700;color:#fff;letter-spacing:.02em}
   .nav{display:flex;gap:2px;flex:1}
-  .nav-btn{display:flex;align-items:center;gap:6px;padding:10px 16px;border:none;background:none;cursor:pointer;font-size:13px;color:var(--text2);border-radius:var(--radius-sm);transition:.15s;font-family:inherit;white-space:nowrap}
-  .nav-btn:hover{background:var(--bg2);color:var(--text)}
-  .nav-btn.active{background:var(--accent-bg);color:var(--accent2);font-weight:600}
+  .nav-btn{display:flex;align-items:center;gap:6px;padding:10px 16px;border:none;background:none;cursor:pointer;font-size:13px;color:rgba(255,255,255,.72);border-radius:var(--radius-sm);transition:.15s;font-family:inherit;white-space:nowrap}
+  .nav-btn:hover{background:rgba(255,255,255,.15);color:#fff}
+  .nav-btn.active{background:#fff;color:#1a4d8f;font-weight:700;border-radius:var(--radius-sm)}
   .nav-btn .icon{font-size:15px}
   /* ── Layout ── */
   .page{display:none;padding:20px;max-width:1200px;margin:0 auto}
   .page.active{display:block}
   /* ── Cards ── */
-  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;box-shadow:var(--shadow)}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;box-shadow:var(--shadow);transition:.15s}
   .card-title{font-size:12px;font-weight:600;color:var(--text2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px}
   /* ── Form fields ── */
   label{display:block;font-size:12px;color:var(--text2);margin-bottom:4px}
   input[type=number],input[type=text],select{
     width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);
-    background:var(--surface2);color:var(--text);font-size:13px;font-family:inherit;
+    background:var(--bg3);color:var(--text);font-size:13px;font-family:inherit;
     transition:.15s;outline:none}
-  input[type=number]:focus,input[type=text]:focus,select:focus{border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 3px rgba(139,111,71,.12)}
+  input[type=number]:focus,input[type=text]:focus,select:focus{border-color:var(--accent);background:var(--surface2);box-shadow:0 0 0 3px rgba(26,77,143,.15)}
   /* ── Toggle ── */
   .toggle-wrap{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
   .toggle-wrap:last-child{border-bottom:none}
@@ -68,11 +68,11 @@
   .tog input{opacity:0;width:0;height:0}
   .tog-track{position:absolute;inset:0;border-radius:11px;background:var(--border2);cursor:pointer;transition:.2s}
   .tog-track:before{content:'';position:absolute;width:18px;height:18px;left:2px;top:2px;border-radius:50%;background:white;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
-  .tog input:checked+.tog-track{background:var(--accent)}
+  .tog input:checked+.tog-track{background:var(--accent);box-shadow:0 0 6px rgba(26,77,143,.35)}
   .tog input:checked+.tog-track:before{transform:translateX(16px)}
   /* ── Buttons ── */
   .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;transition:.15s;font-family:inherit;border:none}
-  .btn-primary{background:var(--accent);color:white}
+  .btn-primary{background:var(--accent);color:white;font-weight:700}
   .btn-primary:hover{background:var(--accent2)}
   .btn-ghost{background:none;border:1px solid var(--border2);color:var(--text2)}
   .btn-ghost:hover{background:var(--bg2);color:var(--text)}
@@ -85,7 +85,7 @@
   .compare-layout{display:grid;grid-template-columns:300px 1fr;gap:16px}
   @media(max-width:800px){.compare-layout{grid-template-columns:1fr}}
   .upload-zone{border:1.5px dashed var(--border2);border-radius:var(--radius);padding:20px;text-align:center;cursor:pointer;transition:.15s;background:var(--bg2)}
-  .upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:var(--accent-bg)}
+  .upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:var(--accent-bg);box-shadow:0 0 0 3px rgba(242,101,34,.15)}
   .upload-zone .uz-icon{font-size:24px;margin-bottom:6px}
   .upload-zone .uz-label{font-size:13px;font-weight:600;color:var(--text)}
   .upload-zone .uz-sub{font-size:11px;color:var(--text3);margin-top:4px}
@@ -96,10 +96,10 @@
   .cb-wrap input{accent-color:var(--accent)}
   .key-sel{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
   .key-btn{padding:5px 12px;border-radius:20px;font-size:12px;border:1px solid var(--border2);background:none;cursor:pointer;color:var(--text2);transition:.15s;font-family:inherit}
-  .key-btn.active{background:var(--accent);border-color:var(--accent);color:white}
+  .key-btn.active{background:var(--accent);border-color:var(--accent);color:white;font-weight:700}
   .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
   @media(max-width:600px){.stats-row{grid-template-columns:repeat(2,1fr)}}
-  .stat-chip{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;text-align:center}
+  .stat-chip{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;text-align:center}
   .stat-chip .sc-num{font-size:20px;font-weight:700;color:var(--text)}
   .stat-chip .sc-lbl{font-size:11px;color:var(--text3);margin-top:2px}
   .stat-chip.up .sc-num{color:var(--red)}
@@ -107,12 +107,13 @@
   .stat-chip.add .sc-num{color:var(--accent)}
   .result-table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border)}
   table{width:100%;border-collapse:collapse;font-size:13px}
-  thead th{background:var(--bg2);color:var(--text2);font-size:11px;font-weight:600;padding:8px 10px;text-align:left;letter-spacing:.04em;position:sticky;top:0}
+  thead th{background:var(--bg3);color:var(--text2);font-size:11px;font-weight:600;padding:8px 10px;text-align:left;letter-spacing:.04em;position:sticky;top:0;border-bottom:1px solid var(--accent)}
+  thead th:nth-child(n+3){text-align:right}
   tbody td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
   tbody tr:last-child td{border-bottom:none}
   tbody tr:hover td{background:var(--bg2)}
   .badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap}
-  .badge-up{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bdr)}
+  .badge-up{background:var(--red-bg);color:#ff6b6b;border:1px solid var(--red-bdr)}
   .badge-down{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bdr)}
   .badge-new{background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow-bdr)}
   .badge-del{background:var(--bg3);color:var(--text2);border:1px solid var(--border2)}
@@ -125,7 +126,7 @@
   .empty-state .es-text{font-size:14px}
   .tabs-filter{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}
   .tab-f{padding:5px 12px;border-radius:20px;font-size:12px;border:1px solid var(--border);background:none;cursor:pointer;color:var(--text2);font-family:inherit;transition:.15s}
-  .tab-f.active{background:var(--accent);border-color:var(--accent);color:white}
+  .tab-f.active{background:var(--accent);border-color:var(--accent);color:white;font-weight:700}
   .summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
   .summary-item{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px}
   .summary-item .si-label{font-size:11px;color:var(--text3)}
@@ -142,14 +143,14 @@
   .field-group{margin-bottom:10px}
   .result-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .r-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;transition:.2s}
-  .r-card.profit-pos{border-color:var(--green-bdr);background:var(--green-bg)}
+  .r-card.profit-pos{border-color:var(--accent2);background:var(--accent-bg)}
   .r-card.profit-neg{border-color:var(--red-bdr);background:var(--red-bg)}
   .r-card .store{font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.04em;margin-bottom:2px}
   .r-card .profit-main{font-size:30px;font-weight:700;color:var(--text);letter-spacing:-.01em;line-height:1;margin-bottom:2px}
-  .r-card.profit-pos .profit-main{color:var(--green)}
+  .r-card.profit-pos .profit-main{color:var(--accent)}
   .r-card.profit-neg .profit-main{color:var(--red)}
   .r-card .margin{font-size:12px;color:var(--text3);margin-bottom:6px}
-  .r-card.profit-pos .margin{color:var(--green)}
+  .r-card.profit-pos .margin{color:var(--accent2)}
   .r-card.profit-neg .margin{color:var(--red)}
   .store-toggle-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
   .store-toggles{display:flex;gap:8px;flex-wrap:wrap}
@@ -170,8 +171,7 @@
 
 <header class="header">
   <div class="brand">
-    <span class="brand-icon">☕</span>
-    <span class="brand-name">Q哥工具箱</span>
+    <img src="data:image/jpeg;base64,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" alt="Q哥" style="height:36px;width:auto;object-fit:contain">
   </div>
   <nav class="nav">
     <button class="nav-btn active" onclick="switchPage('compare',this)">
@@ -271,7 +271,7 @@
           <button class="tab-f" onclick="filterResults('same',this)">＝ 相同</button>
         </div>
         <div id="result-area">
-          <div class="empty-state"><div class="es-icon">☕</div><div class="es-text">尚未比對<br><span style="font-size:12px">請先上傳新舊報價單</span></div></div>
+          <div class="empty-state"><div class="es-icon" style="font-size:36px">🎮</div><div class="es-text">尚未比對<br><span style="font-size:12px">請先上傳新舊報價單</span></div></div>
         </div>
       </div>
 
@@ -392,7 +392,7 @@ function setKey(mode,btn){keyMode=mode;document.querySelectorAll('.key-btn').for
 
 /* ── 工具函式 ── */
 const SKIP_COL=[/利潤/,/margin/i,/profit/i,/毛利/,/折扣/,/discount/i,/佣金/,/commission/i];
-const PRICE_KW=['經銷價','建議售價','定價','牌價','售價','底價','進價','price','cost','amount','msrp','retail','wholesale','經銷','價格'];
+const PRICE_KW=['活動價','經銷價','建議售價','定價','牌價','售價','底價','進價','price','cost','amount','msrp','retail','wholesale','經銷','價格'];
 const STOCK_COL_KW=['訂購數量','訂購','庫存','stock','qty','數量','quantity','供貨','缺貨狀態','補貨'];
 const QTY_PAT=[/訂購/,/數量/,/qty/i,/quantity/i,/stock/i,/庫存/,/order/i,/pcs/i,/件數/];
 // 缺貨狀態：補貨中也算缺貨（未到貨），有貨才算 back
@@ -428,7 +428,8 @@ function normKey(s,ic,isp){
   return s;
 }
 function stripMonth(s){
-  return String(s).replace(/^\d+月\s*/,'').replace(/^\d{4}年?\d*月?\s*/,'').replace(/\s*(活動|特價|促銷)\s*/g,'').trim();
+  // 只去掉最前面的「X月」或「XXXX年X月」數字，保留後面的語義（活動價、售價等）
+  return String(s).replace(/^\d+月\s*/,'').replace(/^\d{4}年?\d*月?\s*/,'').trim();
 }
 function colLabel(ac){return stripMonth(ac)||ac;}
 
@@ -448,34 +449,59 @@ function detectHeaderRow(rows){
 }
 
 /* ── Key 欄自動偵測 ── */
-// 優先順序：國際條碼/EAN/JAN > 料號/SKU/廠商料號 > 品名
+// 關鍵字清單（輔助用，不強制依賴）
 const EAN_PATTERNS=[/國際條碼/,/ean/i,/jan/i,/upc/i,/gtin/i,/barcode/i,/條碼/,/isbn/i];
 const SKU_PATTERNS=[/料號/,/sku/i,/品番/,/型號/,/品號/,/廠商料號/,/item.?no/i,/part.?no/i,/product.?id/i,/code/i];
-const NAME_PATTERNS=[/品名/,/中文名稱/,/名稱/,/product.*name/i,/item.*name/i,/商品名/,/description/i];
+const NAME_PATTERNS=[/品名/,/中文名稱/,/名稱/,/product.*name/i,/item.*name/i,/商品名/,/description/i,/產品名稱/];
+// 非價格/百分比/日期的判斷
+function isLikelyId(v){
+  const s=String(v||'').trim();
+  if(!s||s.length<2)return false;
+  if(isPureNumber(s)&&s.length<8)return false; // 短數字可能是價格
+  if(/^[\d.]+%$/.test(s))return false; // 百分比
+  if(/^\d{4}[\/\-]\d/.test(s))return false; // 日期
+  return true;
+}
+function scoreColAsKey(col,rows){
+  const vals=rows.map(r=>String(r[col]===undefined||r[col]===null?'':r[col]).trim()).filter(v=>isLikelyId(v));
+  if(vals.length<3)return 0;
+  const uniq=new Set(vals).size;
+  // 唯一性滿分才是真正的 key 欄
+  const uniqueness=uniq/vals.length;
+  // 長度一致性加分（料號通常長度相近）
+  const avgLen=vals.reduce((a,b)=>a+b.length,0)/vals.length;
+  const lenVar=vals.reduce((a,b)=>a+Math.abs(b.length-avgLen),0)/vals.length;
+  const consistency=1/(1+lenVar/Math.max(avgLen,1));
+  return uniqueness*0.8+consistency*0.2;
+}
 function detectKeyColName(cols,rows){
-  // 1. 優先找 EAN/條碼欄（全域唯一，最準確）
+  // 排除明顯的價格欄、百分比欄、說明欄
+  const PRICE_EXCL=[...PRICE_KW,'%','利潤','說明','備註','remark','note','description'];
+  const candidateCols=cols.filter(c=>!PRICE_EXCL.some(k=>String(c).toLowerCase().includes(k.toLowerCase())));
+
+  // 1. EAN/條碼欄名關鍵字 + 驗證資料
   for(const p of EAN_PATTERNS){
-    const m=cols.find(c=>p.test(String(c)));
+    const m=candidateCols.find(c=>p.test(String(c)));
     if(m){
-      // 驗證：該欄值大多是條碼格式（純數字或數字-數字）且唯一
-      const vals=rows.slice(0,50).map(r=>String(r[m]||'').trim()).filter(v=>v);
-      const numericRatio=vals.filter(v=>/^\d{8,14}(-\d+)?$/.test(v)).length/Math.max(vals.length,1);
-      if(numericRatio>0.5)return m;
+      const s=scoreColAsKey(m,rows);
+      if(s>0.8)return m;
     }
   }
-  // 2. 料號/SKU 欄
+  // 2. 料號/SKU 欄名關鍵字 + 驗證資料
   for(const p of SKU_PATTERNS){
-    const m=cols.find(c=>p.test(String(c)));
-    if(m)return m;
+    const m=candidateCols.find(c=>p.test(String(c)));
+    if(m){
+      const s=scoreColAsKey(m,rows);
+      if(s>0.7)return m;
+    }
   }
-  // 3. 找數值唯一性最高的欄（fallback）
-  let bestCol=null,bestUniq=0;
-  for(const col of cols){
-    const vals=rows.map(r=>String(r[col]||'').trim()).filter(v=>v&&!isPureNumber(v));
-    const uniq=new Set(vals).size;
-    if(vals.length>3&&uniq===vals.length&&uniq>bestUniq){bestUniq=uniq;bestCol=col;}
+  // 3. 純資料唯一性評分（不依賴欄名，適用任何廠商格式）
+  let bestCol=null,bestScore=0;
+  for(const col of candidateCols){
+    const s=scoreColAsKey(col,rows);
+    if(s>bestScore){bestScore=s;bestCol=col;}
   }
-  if(bestCol)return bestCol;
+  if(bestCol&&bestScore>0.85)return bestCol;
   // 4. 品名欄（最後手段）
   for(const p of NAME_PATTERNS){
     const m=cols.find(c=>p.test(String(c)));
@@ -610,7 +636,12 @@ function runCompare(){
   const workACols=aCols.filter(c=>c!==keyA&&!isSkipCol(c));
   const workBCols=bCols.filter(c=>c!==keyB&&!isSkipCol(c));
   const pairs=matchCols(workACols,workBCols);
-  const pricePairs=pairs.filter(([ac])=>isPriceCol(colLabel(ac))&&!isQtyCol(colLabel(ac)));
+  // 優先用「售價/活動價/建議售價」，避免誤用「進價/底價」
+  const SELL_KW=['活動價','售價','建議售價','定價','牌價','retail','msrp'];
+  const COST_KW=['進價','底價','成本','cost','進貨'];
+  const allPricePairs=pairs.filter(([ac])=>isPriceCol(colLabel(ac))&&!isQtyCol(colLabel(ac)));
+  const sellPairs=allPricePairs.filter(([ac])=>SELL_KW.some(k=>colLabel(ac).includes(k)));
+  const pricePairs=sellPairs.length?sellPairs:allPricePairs;
   const stockPairs=pairs.filter(([ac])=>isStockCol(colLabel(ac))||isQtyCol(colLabel(ac)));
 
   // 找品名欄（用於顯示）
@@ -634,8 +665,13 @@ function runCompare(){
     if(ra&&!rb){type='new';}
     else if(rb&&!ra){type='del';}
     else{
+      // 新品判定：舊批所有價格欄都是空值 → 視為新品（如預告後正式上市）
+      if(pricePairs.length){
+        const oldHasPrice=pricePairs.some(([,bc])=>{const v=gv(rb,bc);return v!==''&&v!==null&&!isNaN(parseFloat(String(v).replace(/[^\d.-]/g,'')));});
+        if(!oldHasPrice){type='new';}
+      }
       // 缺貨判斷：新批訂購數量有填補貨中/缺貨 = 缺貨
-      if(stockPairs.length){
+      if(type==='same'&&stockPairs.length){
         const newOos=stockPairs.some(([ac])=>isOos(gv(ra,ac)));
         if(newOos){type='oos';}
       }
@@ -669,10 +705,18 @@ function runCompare(){
       }
     }
     const name=ra?gv(ra,nameColA):(rb?gv(rb,nameColA):'');
-    // 取國際條碼欄顯示
-    const barcodeCol=aCols.find(c=>/國際條碼|barcode|ean|jan|upc|條碼/i.test(c))||'';
+    // 取「條碼/料號」欄顯示：優先用 keyA，它就是最佳識別碼
+    const barcodeCol=keyA||'';
     const barcode=ra&&barcodeCol?gv(ra,barcodeCol):(rb&&barcodeCol?gv(rb,barcodeCol):'');
-    allResults.push({key,name,barcode,type,priceNew,priceOld,change});
+    // 取成本/進價欄
+    const COST_KW2=['進價','底價','成本','cost','進貨'];
+    const costPairFound=pairs.find(([ac])=>COST_KW2.some(k=>colLabel(ac).includes(k))&&!isQtyCol(colLabel(ac)));
+    const costNew=costPairFound&&ra?gv(ra,costPairFound[0]):'';
+    const costOld=costPairFound&&rb?gv(rb,costPairFound[1]):'';
+    // 計算成本異動
+    const cnNum=toNum(costNew),coNum=toNum(costOld);
+    const costChange=(cnNum!==null&&coNum!==null&&Math.abs(cnNum-coNum)>0.001)?Math.round((cnNum-coNum)*100)/100:'';
+    allResults.push({key,name,barcode,type,priceNew,priceOld,costNew,costOld,change,costChange});
   }
 
   const counts={
@@ -726,11 +770,34 @@ function renderResults(rows,onlyDiff){
   if(onlyDiff)rows=rows.filter(r=>r.type!=='same');
   const area=document.getElementById('result-area');
   if(!rows.length){area.innerHTML='<div class="empty-state"><div class="es-icon">✅</div><div class="es-text">無差異項目</div></div>';return}
-  let html='<div class="result-table-wrap"><table><thead><tr><th>品名</th><th>國際條碼</th><th>舊價</th><th>新價</th><th>異動</th><th>狀態</th></tr></thead><tbody>';
+  let html='<div class="result-table-wrap"><table><thead><tr><th>品名</th><th>條碼 / 料號</th><th style="text-align:right">舊售價</th><th style="text-align:right">新售價</th><th style="text-align:right">售價異動</th><th style="text-align:right">舊進價</th><th style="text-align:right">新進價</th><th style="text-align:right">進價異動</th><th>狀態</th></tr></thead><tbody>';
   for(const r of rows){
-    const chg=r.change!==''?(r.change>0?'▲ +'+r.change:'▼ '+r.change):'—';
-    const chgColor=r.change>0?'color:var(--red)':r.change<0?'color:var(--green)':'color:var(--text3)';
-    html+=`<tr><td style="max-width:220px;word-break:break-word">${r.name||r.key}</td><td style="font-size:11px;color:var(--text2);white-space:nowrap">${r.barcode||'—'}</td><td>${r.priceOld||'—'}</td><td>${r.priceNew||'—'}</td><td style="${chgColor};font-weight:600">${chg}</td><td><span class="badge ${badgeMap[r.type]}">${labelMap[r.type]}</span></td></tr>`;
+    // 售價異動
+    const priceChgNum=r.change!==''&&r.change!==null?r.change:null;
+    const priceChgStr=priceChgNum!==null?(priceChgNum>0?'▲ +'+priceChgNum:'▼ '+priceChgNum):'—';
+    const priceChgColor=priceChgNum!==null?(priceChgNum>0?'color:var(--red)':'color:var(--green)'):'color:var(--text3)';
+    // 進價異動
+    const costChgNum=r.costChange!==''&&r.costChange!==null?r.costChange:null;
+    const costChgStr=costChgNum!==null?(costChgNum>0?'▲ +'+costChgNum:'▼ '+costChgNum):'—';
+    const costChgColor=costChgNum!==null?(costChgNum>0?'color:var(--red)':'color:var(--green)'):'color:var(--text3)';
+    // 方案B：新售價 深藍pill，新進價 淺藍pill
+    const newPriceHtml=r.priceNew
+      ?`<span style="font-size:13px;font-weight:700;color:#0f3566;background:#dde8f8;padding:3px 10px;border-radius:5px;display:inline-block">${r.priceNew}</span>`
+      :'<span style="color:var(--text3)">—</span>';
+    const newCostHtml=r.costNew
+      ?`<span style="font-size:12px;font-weight:700;color:#185fa5;background:#e6f1fb;padding:2px 8px;border-radius:5px;display:inline-block">${r.costNew}</span>`
+      :'<span style="color:var(--text3)">—</span>';
+    html+=`<tr>
+      <td style="max-width:200px;word-break:break-word">${r.name||r.key}</td>
+      <td style="font-size:11px;color:var(--text2);white-space:nowrap">${r.barcode||'—'}</td>
+      <td style="text-align:right;color:var(--text3)">${r.priceOld||'—'}</td>
+      <td style="text-align:right">${newPriceHtml}</td>
+      <td style="${priceChgColor};font-weight:700;text-align:right">${priceChgStr}</td>
+      <td style="text-align:right;color:var(--text3);font-size:12px">${r.costOld||'—'}</td>
+      <td style="text-align:right">${newCostHtml}</td>
+      <td style="${costChgColor};font-weight:700;text-align:right;font-size:12px">${costChgStr}</td>
+      <td><span class="badge ${badgeMap[r.type]}">${labelMap[r.type]}</span></td>
+    </tr>`;
   }
   html+='</tbody></table></div>';
   area.innerHTML=html;
@@ -762,7 +829,7 @@ function resetAll(){
     document.getElementById('label-'+id).textContent='點擊或拖曳上傳';
     document.getElementById('file-'+id).value='';
   });
-  document.getElementById('result-area').innerHTML='<div class="empty-state"><div class="es-icon">☕</div><div class="es-text">尚未比對<br><span style="font-size:12px">請先上傳新舊報價單</span></div></div>';
+  document.getElementById('result-area').innerHTML='<div class="empty-state"><div class="es-icon" style="font-size:36px">🎮</div><div class="es-text">尚未比對<br><span style="font-size:12px">請先上傳新舊報價單</span></div></div>';
   document.getElementById('summary-area').innerHTML='<div class="empty-state"><div class="es-icon">📊</div><div class="es-text">尚未比對</div></div>';
   ['s-all','s-up','s-down','s-new'].forEach(id=>document.getElementById(id).textContent='0');
 }
